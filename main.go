@@ -43,15 +43,15 @@ func main() {
 	case "install", "i":
 		err = install(flag.Args()[1:])
 	case "build", "b":
-		err = build(flag.Args()[1:])
+		err = gom_exec(append([]string{"go", "build"}, flag.Args()[1:]...), None)
 	case "test", "t":
-		err = test(flag.Args()[1:])
+		err = gom_exec(append([]string{"go", "test"}, flag.Args()[1:]...), None)
 	case "run", "r":
-		err = run(flag.Args()[1:])
+		err = gom_exec(append([]string{"go", "run"}, flag.Args()[1:]...), None)
 	case "doc", "d":
-		err = doc(flag.Args()[1:])
+		err = gom_exec(append([]string{"godoc"}, flag.Args()[1:]...), None)
 	case "exec", "e":
-		err = exec(flag.Args()[1:])
+		err = gom_exec(flag.Args()[1:], None)
 	case "gen", "g":
 		switch flag.Arg(1) {
 		case "travis-yml":
