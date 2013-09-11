@@ -17,6 +17,8 @@ func main() {
 		fmt.Println(" Tasks:")
 		fmt.Println("   gom build")
 		fmt.Println("   gom install")
+		fmt.Println("   gom test")
+		fmt.Println("   gom gen-travis-yml")
 		os.Exit(1)
 	}
 	goms, err := parseGomfile("Gomfile")
@@ -37,6 +39,8 @@ func main() {
 		err = install(goms)
 	case "build":
 		err = build()
+	case "test":
+		err = test()
 	case "gen-travis-yml":
 		err = gen_travis_yml()
 	}
