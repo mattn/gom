@@ -16,8 +16,8 @@ Installation
 Gomfile
 -------
 
-    gom 'github.com/mattn/go-runewidth', 'go1'
-    gom 'github.com/mattn/go-scan'
+    gom 'github.com/mattn/go-runewidth', :tag => 'go1'
+    gom 'github.com/mattn/go-scan', :commit => 'ecb144fb1f2848a24ebfdadf8e64380406d87206'
     gom 'github.com/daviddengcn/go-colortext'
  
 Usage
