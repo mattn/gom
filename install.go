@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/daviddengcn/go-colortext"
 	"os"
-	"os/exec"
 	"path/filepath"
 )
 
@@ -29,22 +28,19 @@ func install(args []string) error {
 		return err
 	}
 	for _, gom := range goms {
-		ct.ChangeColor(ct.Cyan, true, ct.None, false)
-		fmt.Printf("installing %s(tag=%s)\n",
-			gom.name,
-			gom.tag)
-		ct.ResetColor()
 		cmdArgs := []string{"go", "get"}
+		ct.ChangeColor(ct.Cyan, true, ct.None, false)
 		if gom.tag != "" {
 			cmdArgs = append(cmdArgs, "-tags", gom.tag)
+			fmt.Printf("installing %s(tag=%s)\n", gom.name, gom.tag)
+		} else {
+			fmt.Printf("installing %s\n", gom.name)
 		}
+		ct.ResetColor()
 		cmdArgs = append(cmdArgs, args...)
 		cmdArgs = append(cmdArgs, gom.name)
-		cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
 		ct.ChangeColor(ct.Blue, true, ct.None, false)
-		err = cmd.Run()
+		err = exec(cmdArgs)
 		ct.ResetColor()
 		if err != nil {
 			return err

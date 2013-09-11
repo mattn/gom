@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 )
 
@@ -17,8 +16,5 @@ func doc(args []string) error {
 	}
 	cmdArgs := []string{"godoc", "-goroot", vendor}
 	cmdArgs = append(cmdArgs, args...)
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return exec(cmdArgs)
 }

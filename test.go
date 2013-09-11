@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/daviddengcn/go-colortext"
 	"os"
-	"os/exec"
 	"path/filepath"
 )
 
@@ -19,14 +18,8 @@ func test(args []string) error {
 	ct.ChangeColor(ct.Cyan, true, ct.None, false)
 	cmdArgs := []string{"go", "test"}
 	cmdArgs = append(cmdArgs, args...)
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	ct.ChangeColor(ct.Blue, true, ct.None, false)
-	err = cmd.Run()
+	err = exec(cmdArgs)
 	ct.ResetColor()
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
