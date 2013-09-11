@@ -102,10 +102,10 @@ func install(args []string) error {
 			commit_or_branch_or_tag = gom.options["branch"]
 		}
 		if has(gom.options, "tag") {
-			commit_or_branch_or_tag = gom.options["branch"]
+			commit_or_branch_or_tag = gom.options["tag"]
 		}
 		if has(gom.options, "commit") {
-			commit_or_branch_or_tag = gom.options["branch"]
+			commit_or_branch_or_tag = gom.options["commit"]
 		}
 		if commit_or_branch_or_tag != "" {
 			err = checkout(gom.name, commit_or_branch_or_tag)
