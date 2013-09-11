@@ -26,6 +26,7 @@ func main() {
 	if flag.NArg() == 0 {
 		usage()
 	}
+	handleSignal()
 
 	var err error
 	switch flag.Arg(0) {
