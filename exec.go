@@ -27,6 +27,9 @@ func ready() error {
 	return nil
 }
 
+var stdout = os.Stdout
+var stderr = os.Stderr
+
 func gom_exec(args []string, c Color) error {
 	if err := ready(); err != nil {
 		return err
@@ -35,8 +38,8 @@ func gom_exec(args []string, c Color) error {
 		usage()
 	}
 	cmd := osexec.Command(args[0], args[1:]...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 	ct.ChangeColor(ct.Color(c), true, ct.None, false)
 	err := cmd.Run()
 	ct.ResetColor()
