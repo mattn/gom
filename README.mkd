@@ -79,4 +79,4 @@ Yasuhiro Matsumoto mattn.jp@gmail.com
 License
 -------
 
-MIT
+MIT: http://mattn.mit-license.org/2013
