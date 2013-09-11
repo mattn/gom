@@ -3,8 +3,67 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 )
+
+func has(kv map[string]string, key string) bool {
+	_, ok := kv[key]
+	return ok
+}
+
+func checkout(repo string, commit_or_branch string) error {
+	vendor, err := filepath.Abs("vendor")
+	if err != nil {
+		return err
+	}
+	p := filepath.Join(vendor, "src")
+	for _, elem := range strings.Split(repo, "/") {
+		p = filepath.Join(p, elem)
+		if isDir(filepath.Join(p, ".git")) {
+			err = vcsExec(p, "git", "checkout", "-q", commit_or_branch)
+			if err != nil {
+				return err
+			}
+			return vcsExec(p, "go", "install")
+		} else if isDir(filepath.Join(p, ".hg")) {
+			err = vcsExec(p, "hg", "update", commit_or_branch)
+			if err != nil {
+				return err
+			}
+			return vcsExec(p, "go", "install")
+		}
+	}
+	return nil
+}
+
+func isDir(p string) bool {
+	if fi, err := os.Stat(filepath.Join(p)); err == nil && fi.IsDir() {
+		return true
+	}
+	return false
+}
+
+func vcsExec(dir string, args ...string) error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	err = os.Chdir(dir)
+	if err != nil {
+		return err
+	}
+	defer os.Chdir(cwd)
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if cmd.Process == nil {
+		return err
+	}
+	return nil
+}
 
 func install(args []string) error {
 	goms, err := parseGomfile("Gomfile")
@@ -28,17 +87,27 @@ func install(args []string) error {
 	}
 	for _, gom := range goms {
 		cmdArgs := []string{"go", "get"}
-		if gom.tag != "" {
-			cmdArgs = append(cmdArgs, "-tags", gom.tag)
-			fmt.Printf("installing %s(tag=%s)\n", gom.name, gom.tag)
-		} else {
-			fmt.Printf("installing %s\n", gom.name)
+		if has(gom.options, "tag") {
+			cmdArgs = append(cmdArgs, "-tags", gom.options["tag"])
 		}
+		fmt.Printf("installing %s\n", gom.name)
 		cmdArgs = append(cmdArgs, args...)
 		cmdArgs = append(cmdArgs, gom.name)
 		err = gom_exec(cmdArgs, Blue)
 		if err != nil {
 			return err
+		}
+		if has(gom.options, "branch") {
+			err = checkout(gom.name, gom.options["branch"])
+			if err != nil {
+				return err
+			}
+		}
+		if has(gom.options, "commit") {
+			err = checkout(gom.name, gom.options["commit"])
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

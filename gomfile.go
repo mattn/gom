@@ -11,9 +11,7 @@ import (
 
 var qx = `'[^']*'|"[^"]*"`
 var re1 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*$`)
-var re2 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*,\s*(` + qx + `)\s*$`)
-var re3 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*,\s*(` + qx + `)\s*((?:,\s*:[a-zA-Z][a-z0-9_]*\s=>\s*` + qx + `))+$`)
-var re4 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*((?:,\s*:[a-zA-Z][a-z0-9_]*\s=>\s*` + qx + `)+)$`)
+var re2 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*((?:,\s*:[a-zA-Z][a-z0-9_]*\s=>\s*` + qx + `)+)$`)
 var reOptions = regexp.MustCompile(`(,\s*:[a-zA-Z][a-z0-9_]*\s=>\s*` + qx + `)`)
 
 func unquote(name string) string {
@@ -31,7 +29,6 @@ func parseOptions(line string, options map[string]string) {
 
 type Gom struct {
 	name    string
-	tag     string
 	options map[string]string
 }
 
@@ -61,26 +58,18 @@ func parseGomfile(filename string) ([]Gom, error) {
 
 		name := ""
 		options := make(map[string]string)
-		tag := ""
 		var items []string
 		if re1.MatchString(line) {
 			items = re1.FindStringSubmatch(line)[1:]
 			name = unquote(items[0])
 		} else if re2.MatchString(line) {
 			items = re2.FindStringSubmatch(line)[1:]
-			name, tag = unquote(items[0]), unquote(items[1])
-		} else if re3.MatchString(line) {
-			items = re3.FindStringSubmatch(line)[1:]
-			name, tag = unquote(items[0]), unquote(items[1])
-			parseOptions(items[2], options)
-		} else if re4.MatchString(line) {
-			items = re4.FindStringSubmatch(line)[1:]
 			name = unquote(items[0])
 			parseOptions(items[1], options)
 		} else {
 			return nil, fmt.Errorf("Failed to parse Gomfile at line %d", n)
 		}
-		goms = append(goms, Gom{name, tag, options})
+		goms = append(goms, Gom{name, options})
 	}
 	return goms, nil
 }
