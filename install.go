@@ -77,7 +77,7 @@ func install(args []string) error {
 	}
 	_, err = os.Stat(vendor)
 	if err != nil {
-		err = os.MkdirAll(vendor, 755)
+		err = os.MkdirAll(vendor, 0755)
 		if err != nil {
 			return err
 		}
