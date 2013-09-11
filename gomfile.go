@@ -35,8 +35,8 @@ type Gom struct {
 	options map[string]string
 }
 
-func parseGomfile() ([]Gom, error) {
-	f, err := os.Open("Gomfile")
+func parseGomfile(filename string) ([]Gom, error) {
+	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}

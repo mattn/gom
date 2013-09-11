@@ -13,7 +13,7 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	goms, err := parseGomfile()
+	goms, err := parseGomfile("Gomfile")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "gom: ", err)
 		os.Exit(1)
