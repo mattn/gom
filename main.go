@@ -12,13 +12,13 @@ import (
 func usage() {
 	flag.Usage()
 	fmt.Println(" Tasks:")
-	fmt.Println("   gom build")
-	fmt.Println("   gom install")
-	fmt.Println("   gom test")
+	fmt.Println("   gom build [options]")
+	fmt.Println("   gom install [options]")
+	fmt.Println("   gom test [options]")
+	fmt.Println("   gom run [options]")
 	fmt.Println("   gom gen travis-yml")
 	os.Exit(1)
 }
-
 
 func main() {
 	flag.Parse()
@@ -38,11 +38,13 @@ func main() {
 	var err error
 	switch flag.Arg(0) {
 	case "install", "i":
-		err = install()
+		err = install(flag.Args()[1:])
 	case "build", "b":
-		err = build()
+		err = build(flag.Args()[1:])
 	case "test", "t":
-		err = test()
+		err = test(flag.Args()[1:])
+	case "run", "r":
+		err = run(flag.Args()[1:])
 	case "gen", "g":
 		switch flag.Arg(1) {
 		case "travis-yml":

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-func install() error {
+func install(args []string) error {
 	goms, err := parseGomfile("Gomfile")
 	if err != nil {
 		return err
@@ -34,12 +34,13 @@ func install() error {
 			gom.name,
 			gom.tag)
 		ct.ResetColor()
-		args := []string{"go", "get", "-x"}
+		cmdArgs := []string{"go", "get"}
 		if gom.tag != "" {
-			args = append(args, "-tags", gom.tag)
+			cmdArgs = append(cmdArgs, "-tags", gom.tag)
 		}
-		args = append(args, gom.name)
-		cmd := exec.Command(args[0], args[1:]...)
+		cmdArgs = append(cmdArgs, args...)
+		cmdArgs = append(cmdArgs, gom.name)
+		cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		ct.ChangeColor(ct.Blue, true, ct.None, false)
