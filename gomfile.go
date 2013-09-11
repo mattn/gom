@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -17,11 +16,12 @@ var reOptions = regexp.MustCompile(`(,\s*:[a-zA-Z][a-z0-9_]*\s=>\s*` + qx + `)`)
 
 func unquote(name string) string {
 	name = strings.TrimSpace(name)
-	unquoted, err := strconv.Unquote(name)
-	if err != nil {
-		return name[1:len(name)-1]
+	if len(name) > 2 {
+		if (name[0] == '\'' && name[len(name)-1] == '\'') || (name[0] == '"' && name[len(name)-1] == '"') {
+			return name[1:len(name)-1]
+		}
 	}
-	return unquoted
+	return name
 }
 
 func parseOptions(line string, options map[string]string) {
