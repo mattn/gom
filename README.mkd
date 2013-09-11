@@ -39,6 +39,20 @@ Generate .travis.yml that use `gom test`
 
    gom gen-travis-yml
 
+Tutorial
+--------
+
+    $ ls
+    main.go
+    
+    $ cat > Gomfile
+    gom 'github.com/mattn/go-runewidth', 'go1'
+    gom 'github.com/daviddengcn/go-colortext'
+    ^D
+    
+    $ gom install
+    $ gom build
+
 Author
 ------
 
