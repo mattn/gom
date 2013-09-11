@@ -11,33 +11,33 @@ Ruby's bundle is awesome.
 Installation
 ------------
 
-   go get github.com/mattn/gom
+    go get github.com/mattn/gom
 
 Gomfile
 -------
 
-   gom 'github.com/mattn/go-runewidth', 'go1'
-   gom 'github.com/mattn/go-scan'
-   gom 'github.com/daviddengcn/go-colortext'
-
+    gom 'github.com/mattn/go-runewidth', 'go1'
+    gom 'github.com/mattn/go-scan'
+    gom 'github.com/daviddengcn/go-colortext'
+ 
 Usage
 -----
 
 Create vendor directory and bundle packages into it
 
-   gom install
+    gom install
 
 Build on current directory with vendor packages
 
-   gom build
+    gom build
 
 Run tests on current directory with vendor packages
 
-   gom test
+    gom test
 
 Generate .travis.yml that use `gom test`
 
-   gom gen-travis-yml
+    gom gen-travis-yml
 
 Author
 ------
