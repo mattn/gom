@@ -37,6 +37,8 @@ func main() {
 		err = install(goms)
 	case "build":
 		err = build()
+	case "gen-travis-yml":
+		err = gen_travis_yml()
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "gom: ", err)
