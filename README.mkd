@@ -1,0 +1,50 @@
+gom - Go Manager
+================
+
+Why
+---
+
+`go get` command is useful. But we want to fix the package versions which is different each them.
+Are you going to do `go get -tags=1.1 ...`, `go get -tag=0.3` for each thems?
+Ruby's bundle is awesome. 
+
+Installation
+------------
+
+   go get github.com/mattn/gom
+
+Gomfile
+-------
+
+   gom 'github.com/mattn/go-runewidth', 'go1'
+   gom 'github.com/mattn/go-scan'
+   gom 'github.com/daviddengcn/go-colortext'
+
+Usage
+-----
+
+Create vendor directory and bundle packages into it
+
+   gom install
+
+Build on current directory with vendor packages
+
+   gom build
+
+Run tests on current directory with vendor packages
+
+   gom test
+
+Generate .travis.yml that use `gom test`
+
+   gom gen-travis-yml
+
+Author
+------
+
+Yasuhiro Matsumoto mattn.jp@gmail.com
+
+License
+-------
+
+MIT
