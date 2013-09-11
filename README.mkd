@@ -1,6 +1,8 @@
 gom - Go Manager
 ================
 
+[![Build Status](https://travis-ci.org/mattn/gom.png?branch=master)](https://travis-ci.org/mattn/gom)
+
 Why
 ---
 
