@@ -14,6 +14,9 @@ func main() {
 
 	if flag.NArg() == 0 {
 		flag.Usage()
+		fmt.Println(" Tasks:")
+		fmt.Println("   gom build")
+		fmt.Println("   gom install")
 		os.Exit(1)
 	}
 	goms, err := parseGomfile("Gomfile")
