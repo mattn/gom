@@ -34,11 +34,9 @@ func checkout(repo string, commit_or_branch_or_tag string) error {
 				return err
 			}
 			return vcsExec(p, "go", "install")
-		} else {
-			return errors.New("gom currently support git/hg for specifying tag/branch/commit")
 		}
 	}
-	return nil
+	return errors.New("gom currently support git/hg for specifying tag/branch/commit")
 }
 
 func isDir(p string) bool {
