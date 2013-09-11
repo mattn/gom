@@ -37,7 +37,7 @@ func TestExec(t *testing.T) {
 		stdout = oldstdout
 	}()
 	stdout = f
-	err = gom_exec([]string{"go", "env"}, None)
+	err = run([]string{"go", "env"}, None)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -13,7 +13,7 @@ import (
 
 const travis_yml = ".travis.yml"
 
-func gen_travis_yml() error {
+func genTravisYml() error {
 	_, err := os.Stat(travis_yml)
 	if err == nil {
 		return errors.New(".travis.yml is already exists")
@@ -62,7 +62,7 @@ func appendPkg(pkgs []string, pkg string) []string {
     return append(pkgs, pkg)
 }
 
-func gen_gomfile() error {
+func genGomfile() error {
 	_, err := os.Stat("Gomfile")
 	if err == nil {
 		return errors.New("Gomfile is already exists")

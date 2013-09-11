@@ -42,7 +42,7 @@ func ready() error {
 var stdout = os.Stdout
 var stderr = os.Stderr
 
-func gom_exec(args []string, c Color) error {
+func run(args []string, c Color) error {
 	if err := ready(); err != nil {
 		return err
 	}

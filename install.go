@@ -91,7 +91,7 @@ func install(args []string) error {
 		fmt.Printf("installing %s\n", gom.name)
 		cmdArgs = append(cmdArgs, args...)
 		cmdArgs = append(cmdArgs, gom.name)
-		err = gom_exec(cmdArgs, Blue)
+		err = run(cmdArgs, Blue)
 		if err != nil {
 			return err
 		}
