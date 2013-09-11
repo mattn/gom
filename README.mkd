@@ -6,8 +6,8 @@ gom - Go Manager
 Why
 ---
 
-`go get` command is useful. But we want to fix the package versions which is different from each latest's update.
-Are you going to do `go get -tags=1.1 ...`, `go get -tag=0.3` for each thems?
+The `go get` command is useful. But we want to fix the problem where package versions are different from the latest update.
+Are you going to do `go get -tags=1.1 ...`, `go get -tag=0.3` for each of them?
 Ruby's bundle is awesome. 
 
 Installation
@@ -37,7 +37,7 @@ Run tests on current directory with vendor packages
 
     gom test
 
-Generate .travis.yml that use `gom test`
+Generate .travis.yml that uses `gom test`
 
     gom gen-travis-yml
 
@@ -74,7 +74,7 @@ If you want to bundle specified branch or commit
 Todo
 ----
 
-* Documentations
+* Documentation
 
 Author
 ------
