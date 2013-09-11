@@ -7,7 +7,7 @@ import (
 )
 
 func usage() {
-	flag.Usage()
+	fmt.Printf("Usage of %s:\n", os.Args[0])
 	fmt.Println(" Tasks:")
 	fmt.Println("   gom build   [options]")
 	fmt.Println("   gom install [options]")
@@ -21,8 +21,8 @@ func usage() {
 }
 
 func main() {
+	flag.Usage = usage
 	flag.Parse()
-
 	if flag.NArg() == 0 {
 		usage()
 	}
