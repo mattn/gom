@@ -16,6 +16,7 @@ func usage() {
 	fmt.Println("   gom install [options]")
 	fmt.Println("   gom test [options]")
 	fmt.Println("   gom run [options]")
+	fmt.Println("   gom doc [options]")
 	fmt.Println("   gom gen travis-yml")
 	os.Exit(1)
 }
@@ -45,6 +46,8 @@ func main() {
 		err = test(flag.Args()[1:])
 	case "run", "r":
 		err = run(flag.Args()[1:])
+	case "doc", "d":
+		err = doc(flag.Args()[1:])
 	case "gen", "g":
 		switch flag.Arg(1) {
 		case "travis-yml":
