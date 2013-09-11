@@ -37,13 +37,13 @@ func main() {
 
 	var err error
 	switch flag.Arg(0) {
-	case "install":
+	case "install", "i":
 		err = install()
-	case "build":
+	case "build", "b":
 		err = build()
-	case "test":
+	case "test", "t":
 		err = test()
-	case "gen":
+	case "gen", "g":
 		switch flag.Arg(1) {
 		case "travis-yml":
 			err = gen_travis_yml()
