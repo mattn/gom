@@ -4,7 +4,7 @@ gom - Go Manager
 Why
 ---
 
-`go get` command is useful. But we want to fix the package versions which is different each them.
+`go get` command is useful. But we want to fix the package versions which is different from each latest's update.
 Are you going to do `go get -tags=1.1 ...`, `go get -tag=0.3` for each thems?
 Ruby's bundle is awesome. 
 
