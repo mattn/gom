@@ -20,11 +20,10 @@ func main() {
 	}
 
 	if flag.Arg(0) == "install" {
-		for _, gom := range goms {
-			fmt.Printf("installing %s(tag: %s, options: %s)\n",
-				gom.name,
-				gom.tag,
-				gom.options)
+		err = install(goms)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "gom: ", err)
+			os.Exit(1)
 		}
 	}
 }
