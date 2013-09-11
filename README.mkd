@@ -42,11 +42,13 @@ Generate .travis.yml that use `gom test`
 Tutorial
 --------
 
+Writing Gomfile and bundle
+
     $ ls
     main.go
     
     $ cat > Gomfile
-    gom 'github.com/mattn/go-runewidth', 'go1'
+    gom 'github.com/mattn/go-runewidth', :tag => 'go1'
     gom 'github.com/daviddengcn/go-colortext'
     ^D
     
@@ -59,10 +61,15 @@ Tutorial
     
     $ gom build
 
+If you want to bundle specified branch or commit
+
+    gom 'github.com/mattn/go-runewidth', :branch => 'branch_name'
+    gom 'github.com/mattn/go-runewidth', :commit => 'commit_name'
+
 Todo
 ----
 
-* Auto-generation with `go gen-gomfile` with the codes
+* Documentations
 
 Author
 ------
