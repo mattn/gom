@@ -3,10 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/daviddengcn/go-colortext"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
 func usage() {
@@ -29,14 +26,6 @@ func main() {
 	if flag.NArg() == 0 {
 		usage()
 	}
-
-	sc := make(chan os.Signal, 10)
-	signal.Notify(sc, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
-	go func() {
-		<-sc
-		ct.ResetColor()
-		os.Exit(0)
-	}()
 
 	var err error
 	switch flag.Arg(0) {
