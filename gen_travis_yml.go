@@ -23,8 +23,8 @@ go:
 before_install:
   - go get github.com/mattn/gom
 script:
-  - gom install
-  - gom test
+  - $HOME/gopath/bin/gom install
+  - $HOME/gopath/bin/gom test
 `)
 	return nil
 }
