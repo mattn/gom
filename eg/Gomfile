@@ -1,0 +1,2 @@
+gom 'github.com/mattn/go-runewidth', 'go1'
+gom 'github.com/daviddengcn/go-colortext'
