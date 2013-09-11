@@ -97,6 +97,8 @@ func install(args []string) error {
 		if err != nil {
 			return err
 		}
+	}
+	for _, gom := range goms {
 		commit_or_branch_or_tag := ""
 		if has(gom.options, "branch") {
 			commit_or_branch_or_tag = gom.options["branch"]
