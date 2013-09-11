@@ -31,19 +31,20 @@ func main() {
 	handleSignal()
 
 	var err error
+	subArgs := flag.Args()[1:]
 	switch flag.Arg(0) {
 	case "install", "i":
-		err = install(flag.Args()[1:])
+		err = install(subArgs)
 	case "build", "b":
-		err = gom_exec(append([]string{"go", "build"}, flag.Args()[1:]...), None)
+		err = gom_exec(append([]string{"go", "build"}, subArgs...), None)
 	case "test", "t":
-		err = gom_exec(append([]string{"go", "test"}, flag.Args()[1:]...), None)
+		err = gom_exec(append([]string{"go", "test"}, subArgs...), None)
 	case "run", "r":
-		err = gom_exec(append([]string{"go", "run"}, flag.Args()[1:]...), None)
+		err = gom_exec(append([]string{"go", "run"}, subArgs...), None)
 	case "doc", "d":
-		err = gom_exec(append([]string{"godoc"}, flag.Args()[1:]...), None)
+		err = gom_exec(append([]string{"godoc"}, subArgs...), None)
 	case "exec", "e":
-		err = gom_exec(flag.Args()[1:], None)
+		err = gom_exec(subArgs, None)
 	case "gen", "g":
 		switch flag.Arg(1) {
 		case "travis-yml":
