@@ -45,11 +45,3 @@ func gom_exec(args []string, c Color) error {
 	}
 	return nil
 }
-
-func run(args []string) error {
-	if err := ready(); err != nil {
-		return err
-	}
-	cmdArgs := []string{"go", "run"}
-	return gom_exec(append(cmdArgs, args...), None)
-}
