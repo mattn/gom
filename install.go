@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,7 +14,7 @@ func has(kv map[string]string, key string) bool {
 	return ok
 }
 
-func checkout(repo string, commit_or_branch string) error {
+func checkout(repo string, commit_or_branch_or_tag string) error {
 	vendor, err := filepath.Abs("vendor")
 	if err != nil {
 		return err
@@ -22,17 +23,19 @@ func checkout(repo string, commit_or_branch string) error {
 	for _, elem := range strings.Split(repo, "/") {
 		p = filepath.Join(p, elem)
 		if isDir(filepath.Join(p, ".git")) {
-			err = vcsExec(p, "git", "checkout", "-q", commit_or_branch)
+			err = vcsExec(p, "git", "checkout", "-q", commit_or_branch_or_tag)
 			if err != nil {
 				return err
 			}
 			return vcsExec(p, "go", "install")
 		} else if isDir(filepath.Join(p, ".hg")) {
-			err = vcsExec(p, "hg", "update", commit_or_branch)
+			err = vcsExec(p, "hg", "update", commit_or_branch_or_tag)
 			if err != nil {
 				return err
 			}
 			return vcsExec(p, "go", "install")
+		} else {
+			return errors.New("gom currently support git/hg for specifying tag/branch/commit")
 		}
 	}
 	return nil
@@ -87,9 +90,6 @@ func install(args []string) error {
 	}
 	for _, gom := range goms {
 		cmdArgs := []string{"go", "get"}
-		if has(gom.options, "tag") {
-			cmdArgs = append(cmdArgs, "-tags", gom.options["tag"])
-		}
 		fmt.Printf("installing %s\n", gom.name)
 		cmdArgs = append(cmdArgs, args...)
 		cmdArgs = append(cmdArgs, gom.name)
@@ -97,14 +97,18 @@ func install(args []string) error {
 		if err != nil {
 			return err
 		}
+		commit_or_branch_or_tag := ""
 		if has(gom.options, "branch") {
-			err = checkout(gom.name, gom.options["branch"])
-			if err != nil {
-				return err
-			}
+			commit_or_branch_or_tag = gom.options["branch"]
+		}
+		if has(gom.options, "tag") {
+			commit_or_branch_or_tag = gom.options["branch"]
 		}
 		if has(gom.options, "commit") {
-			err = checkout(gom.name, gom.options["commit"])
+			commit_or_branch_or_tag = gom.options["branch"]
+		}
+		if commit_or_branch_or_tag != "" {
+			err = checkout(gom.name, commit_or_branch_or_tag)
 			if err != nil {
 				return err
 			}
