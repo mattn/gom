@@ -3,7 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/daviddengcn/go-colortext"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -19,11 +22,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	if flag.Arg(0) == "install" {
+	sc := make(chan os.Signal, 10)
+	signal.Notify(sc, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
+	go func() {
+		<-sc
+		ct.ResetColor()
+		os.Exit(0)
+	}()
+	switch flag.Arg(0) {
+	case "install":
 		err = install(goms)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "gom: ", err)
-			os.Exit(1)
-		}
+	case "build":
+		err = build()
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "gom: ", err)
+		os.Exit(1)
 	}
 }
