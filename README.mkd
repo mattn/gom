@@ -53,12 +53,15 @@ Writing Gomfile and bundle
     ^D
     
     $ gom install
+    installing github.com/mattn/go-runewidth
+    installing github.com/daviddengcn/go-colortext
+
     $ find vendor/src -maxdepth 2
     vendor/src
     vendor/src/github.com
     vendor/src/github.com/daviddengcn
     vendor/src/github.com/mattn
-    
+
     $ gom build
 
 If you want to bundle specified branch or commit
