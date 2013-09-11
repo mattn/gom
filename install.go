@@ -8,7 +8,11 @@ import (
 	"path/filepath"
 )
 
-func install(goms []Gom) error {
+func install() error {
+	goms, err := parseGomfile("Gomfile")
+	if err != nil {
+		return err
+	}
 	vendor, err := filepath.Abs("vendor")
 	if err != nil {
 		return err

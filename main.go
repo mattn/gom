@@ -26,11 +26,6 @@ func main() {
 	if flag.NArg() == 0 {
 		usage()
 	}
-	goms, err := parseGomfile("Gomfile")
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "gom: ", err)
-		os.Exit(1)
-	}
 
 	sc := make(chan os.Signal, 10)
 	signal.Notify(sc, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
@@ -39,9 +34,11 @@ func main() {
 		ct.ResetColor()
 		os.Exit(0)
 	}()
+
+	var err error
 	switch flag.Arg(0) {
 	case "install":
-		err = install(goms)
+		err = install()
 	case "build":
 		err = build()
 	case "test":
@@ -50,6 +47,8 @@ func main() {
 		switch flag.Arg(1) {
 		case "travis-yml":
 			err = gen_travis_yml()
+		case "gomfile":
+			err = gen_gomfile()
 		default:
 			usage()
 		}
