@@ -52,7 +52,7 @@ func parseGomfile(filename string) ([]Gom, error) {
 			return nil, err
 		}
 		line := strings.TrimSpace(string(lb))
-		if line == "" {
+		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 
