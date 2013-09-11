@@ -12,13 +12,14 @@ import (
 func usage() {
 	flag.Usage()
 	fmt.Println(" Tasks:")
-	fmt.Println("   gom build [options]")
+	fmt.Println("   gom build   [options]")
 	fmt.Println("   gom install [options]")
-	fmt.Println("   gom test [options]")
-	fmt.Println("   gom run [options]")
-	fmt.Println("   gom doc [options]")
-	fmt.Println("   gom exec [arguments]")
+	fmt.Println("   gom test    [options]")
+	fmt.Println("   gom run     [options]")
+	fmt.Println("   gom doc     [options]")
+	fmt.Println("   gom exec    [arguments]")
 	fmt.Println("   gom gen travis-yml")
+	fmt.Println("   gom gen gomfile")
 	os.Exit(1)
 }
 
