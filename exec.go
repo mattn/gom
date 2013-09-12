@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/daviddengcn/go-colortext"
 	"os"
-	"os/signal"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"syscall"
 )
@@ -13,7 +13,7 @@ type Color int
 
 const (
 	None Color = Color(ct.None)
-	Red Color = Color(ct.Red)
+	Red  Color = Color(ct.Red)
 	Blue Color = Color(ct.Blue)
 )
 
@@ -28,9 +28,25 @@ func handleSignal() {
 }
 
 func ready() error {
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
 	vendor, err := filepath.Abs("vendor")
 	if err != nil {
 		return err
+	}
+	for {
+		file := filepath.Join(dir, "Gomfile")
+		if isFile(file) {
+			vendor = filepath.Join(dir, "vendor")
+			break
+		}
+		next := filepath.Clean(filepath.Join(dir, ".."))
+		if next == dir {
+			break
+		}
+		dir = next
 	}
 	err = os.Setenv("GOPATH", vendor)
 	if err != nil {
