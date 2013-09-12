@@ -18,7 +18,7 @@ func unquote(name string) string {
 	name = strings.TrimSpace(name)
 	if len(name) > 2 {
 		if (name[0] == '\'' && name[len(name)-1] == '\'') || (name[0] == '"' && name[len(name)-1] == '"') {
-			return name[1:len(name)-1]
+			return name[1 : len(name)-1]
 		}
 	}
 	return name

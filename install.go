@@ -39,6 +39,13 @@ func checkout(repo string, commit_or_branch_or_tag string) error {
 	return errors.New("gom currently support git/hg for specifying tag/branch/commit")
 }
 
+func isFile(p string) bool {
+	if fi, err := os.Stat(filepath.Join(p)); err == nil && !fi.IsDir() {
+		return true
+	}
+	return false
+}
+
 func isDir(p string) bool {
 	if fi, err := os.Stat(filepath.Join(p)); err == nil && fi.IsDir() {
 		return true

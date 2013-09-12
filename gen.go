@@ -54,12 +54,12 @@ func scanPackages(filename string) (ret []string) {
 }
 
 func appendPkg(pkgs []string, pkg string) []string {
-    for _, ele := range pkgs {
-        if ele == pkg {
-            return pkgs
-        }
-    }
-    return append(pkgs, pkg)
+	for _, ele := range pkgs {
+		if ele == pkg {
+			return pkgs
+		}
+	}
+	return append(pkgs, pkg)
 }
 
 func genGomfile() error {

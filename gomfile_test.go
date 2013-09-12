@@ -52,7 +52,7 @@ gom 'github.com/mattn/go-gtk'
 		t.Fatal(err)
 	}
 	expected := []Gom{
-		{name: "github.com/mattn/go-sqlite3", options: map[string]string {"tag": ">3.33"}},
+		{name: "github.com/mattn/go-sqlite3", options: map[string]string{"tag": ">3.33"}},
 		{name: "github.com/mattn/go-gtk", options: map[string]string{}},
 	}
 	if !reflect.DeepEqual(goms, expected) {
