@@ -6,7 +6,7 @@ gom - Go Manager
 Why
 ---
 
-The `go get` command is useful. But we want to fix the problem where package versions are different from the latest update.
+The `go get` command is useful. But we want to freeze the problem where package versions are different from the latest update.
 Are you going to do `go get -tags=1.1 ...`, `go get -tag=0.3` for each of them?
 Ruby's bundle is awesome. 
 
