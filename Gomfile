@@ -1,1 +1,3 @@
-gom 'github.com/daviddengcn/go-colortext'
+group :production, :development do
+  gom 'github.com/daviddengcn/go-colortext'
+end

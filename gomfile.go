@@ -10,9 +10,11 @@ import (
 )
 
 var qx = `'[^']*'|"[^"]*"`
-var re1 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*$`)
-var re2 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*((?:,\s*:[a-zA-Z][a-z0-9_]*\s=>\s*` + qx + `)+)$`)
-var reOptions = regexp.MustCompile(`(,\s*:[a-zA-Z][a-z0-9_]*\s=>\s*` + qx + `)`)
+var re_group = regexp.MustCompile(`\s*group\s+((?::[a-z][a-z0-9_]*\s*|,\s*:[a-z][a-z0-9]*\s*)*)\s*do\s*$`)
+var re_end = regexp.MustCompile(`\s*end\s*$`)
+var re_gom1 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*$`)
+var re_gom2 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*((?:,\s*:[a-z][a-z0-9_]*\s=>\s*` + qx + `)+)$`)
+var re_options = regexp.MustCompile(`(,\s*:[a-z][a-z0-9_]*\s=>\s*` + qx + `)`)
 
 func unquote(name string) string {
 	name = strings.TrimSpace(name)
@@ -24,8 +26,18 @@ func unquote(name string) string {
 	return name
 }
 
+func isEnv(envs []string, env string) bool {
+	for _, e := range envs {
+		e = strings.TrimSpace(e)
+		if e[1:] == env {
+			return true
+		}
+	}
+	return false
+}
+
 func parseOptions(line string, options map[string]string) {
-	ss := reOptions.FindAllStringSubmatch(line, -1)
+	ss := re_options.FindAllStringSubmatch(line, -1)
 	for _, s := range ss {
 		kvs := strings.Split(strings.TrimSpace(s[0])[1:], "=>")
 		options[strings.TrimSpace(kvs[0])[1:]] = unquote(kvs[1])
@@ -47,6 +59,7 @@ func parseGomfile(filename string) ([]Gom, error) {
 	goms := make([]Gom, 0)
 
 	n := 0
+	skip := 0
 	for {
 		n++
 		lb, _, err := br.ReadLine()
@@ -64,11 +77,30 @@ func parseGomfile(filename string) ([]Gom, error) {
 		name := ""
 		options := make(map[string]string)
 		var items []string
-		if re1.MatchString(line) {
-			items = re1.FindStringSubmatch(line)[1:]
+		if re_group.MatchString(line) {
+			envs := strings.Split(re_group.FindStringSubmatch(line)[1], ",")
+			switch {
+			case isEnv(envs, "production") && *productionEnv:
+				continue
+			case isEnv(envs, "development") && *developmentEnv:
+				continue
+			case isEnv(envs, "test") && *testEnv:
+				continue
+			}
+			skip++
+			continue
+		} else if re_end.MatchString(line) {
+			if skip > 0 {
+				skip--
+			}
+			continue
+		} else if skip > 0 {
+			continue
+		} else if re_gom1.MatchString(line) && skip == 0 {
+			items = re_gom1.FindStringSubmatch(line)[1:]
 			name = unquote(items[0])
-		} else if re2.MatchString(line) {
-			items = re2.FindStringSubmatch(line)[1:]
+		} else if re_gom2.MatchString(line) && skip == 0 {
+			items = re_gom2.FindStringSubmatch(line)[1:]
 			name = unquote(items[0])
 			parseOptions(items[1], options)
 		} else {

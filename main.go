@@ -22,6 +22,10 @@ func usage() {
 	os.Exit(1)
 }
 
+var productionEnv = flag.Bool("production", false, "production environment")
+var developmentEnv = flag.Bool("development", false, "development environment")
+var testEnv = flag.Bool("test", false, "test environment")
+
 func main() {
 	flag.Usage = usage
 	flag.Parse()
@@ -29,6 +33,10 @@ func main() {
 		usage()
 	}
 	handleSignal()
+
+	if !*productionEnv && !*developmentEnv && !*testEnv {
+		*developmentEnv = true
+	}
 
 	var err error
 	subArgs := flag.Args()[1:]
