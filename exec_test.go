@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -49,9 +51,13 @@ func TestExec(t *testing.T) {
 	}
 	gopath := ""
 	for _, line := range strings.Split(string(b), "\n") {
-		item := strings.SplitN(line, " ", 2)
-		if len(item) > 1 && strings.HasPrefix(item[1], "GOPATH=") {
-			gopath = item[1][7:]
+		if runtime.GOOS == "windows" {
+			item := strings.SplitN(line, " ", 2)
+			line = item[1]
+		} else {
+		}
+		if strings.HasPrefix(line, "GOPATH=") {
+			gopath, _ = strconv.Unquote(line[7:])
 		}
 	}
 	found := false
