@@ -53,10 +53,13 @@ func TestExec(t *testing.T) {
 	for _, line := range strings.Split(string(b), "\n") {
 		if runtime.GOOS == "windows" {
 			item := strings.SplitN(line, " ", 2)
-			line = item[1]
-		} else {
-		}
-		if strings.HasPrefix(line, "GOPATH=") {
+			if len(item) < 2 {
+				continue
+			}
+			if strings.HasPrefix(item[1], "GOPATH=") {
+				gopath = item[1][7:]
+			}
+		} else if strings.HasPrefix(line, "GOPATH=") {
 			gopath, _ = strconv.Unquote(line[7:])
 		}
 	}
