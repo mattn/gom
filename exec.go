@@ -71,8 +71,5 @@ func run(args []string, c Color) error {
 	ct.ChangeColor(ct.Color(c), true, ct.None, false)
 	err := cmd.Run()
 	ct.ResetColor()
-	if cmd.Process == nil {
-		return err
-	}
-	return nil
+	return err
 }
