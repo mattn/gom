@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/daviddengcn/go-colortext"
 	"os"
 	"os/exec"
@@ -27,6 +28,13 @@ func handleSignal() {
 	}()
 }
 
+func appendenv(key, value string) error {
+	if oldValue := os.Getenv(key); oldValue != "" {
+		value = fmt.Sprintf("%s:%s", value, oldValue)
+	}
+	return os.Setenv(key, value)
+}
+
 func ready() error {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -48,7 +56,7 @@ func ready() error {
 		}
 		dir = next
 	}
-	err = os.Setenv("GOPATH", vendor)
+	err = appendenv("GOPATH", vendor)
 	if err != nil {
 		return err
 	}
