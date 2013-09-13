@@ -9,9 +9,18 @@ import (
 	"strings"
 )
 
-func has(kv map[string]string, key string) bool {
-	_, ok := kv[key]
-	return ok
+func has(c interface{}, key string) bool {
+	if m, ok := c.(map[string]interface{}); ok {
+		_, ok := m[key]
+		return ok
+	} else if a, ok := c.([]string); ok {
+		for _, s := range a {
+			if ok && s == key {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func checkout(repo string, commit_or_branch_or_tag string) error {
@@ -94,6 +103,15 @@ func install(args []string) error {
 		return err
 	}
 	for _, gom := range goms {
+		if group, ok := gom.options["group"]; ok {
+			if !matchEnv(group) {
+				continue
+			}
+		} else if goos, ok := gom.options["goos"]; ok {
+			if !matchOS(goos) {
+				continue
+			}
+		}
 		cmdArgs := []string{"go", "get"}
 		fmt.Printf("installing %s\n", gom.name)
 		cmdArgs = append(cmdArgs, args...)
@@ -106,13 +124,13 @@ func install(args []string) error {
 	for _, gom := range goms {
 		commit_or_branch_or_tag := ""
 		if has(gom.options, "branch") {
-			commit_or_branch_or_tag = gom.options["branch"]
+			commit_or_branch_or_tag, _ = gom.options["branch"].(string)
 		}
 		if has(gom.options, "tag") {
-			commit_or_branch_or_tag = gom.options["tag"]
+			commit_or_branch_or_tag, _ = gom.options["tag"].(string)
 		}
 		if has(gom.options, "commit") {
-			commit_or_branch_or_tag = gom.options["commit"]
+			commit_or_branch_or_tag, _ = gom.options["commit"].(string)
 		}
 		if commit_or_branch_or_tag != "" {
 			err = checkout(gom.name, commit_or_branch_or_tag)

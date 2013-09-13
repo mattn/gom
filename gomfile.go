@@ -6,15 +6,17 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
 var qx = `'[^']*'|"[^"]*"`
-var re_group = regexp.MustCompile(`\s*group\s+((?::[a-z][a-z0-9_]*\s*|,\s*:[a-z][a-z0-9]*\s*)*)\s*do\s*$`)
+var kx = `:[a-z][a-z0-9_]*`
+var ax = `(?:\s*` + kx + `\s*|,\s*` + kx + `\s*)`
+var re_group = regexp.MustCompile(`\s*group\s+((?:` + kx + `\s*|,\s*` + kx + `\s*)*)\s*do\s*$`)
 var re_end = regexp.MustCompile(`\s*end\s*$`)
-var re_gom1 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*$`)
-var re_gom2 = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*((?:,\s*:[a-z][a-z0-9_]*\s=>\s*` + qx + `)+)$`)
-var re_options = regexp.MustCompile(`(,\s*:[a-z][a-z0-9_]*\s=>\s*` + qx + `)`)
+var re_gom = regexp.MustCompile(`^\s*gom\s+(` + qx + `)\s*((?:,\s*` + kx + `\s*=>\s*(?:` + qx + `|\s*\[\s*` + ax + `*\s*\]\s*))*)$`)
+var re_options = regexp.MustCompile(`(,\s*` + kx + `\s*=>\s*(?:` + qx + `|\s*\[\s*` + ax + `*\s*\]\s*)\s*)`)
 
 func unquote(name string) string {
 	name = strings.TrimSpace(name)
@@ -26,27 +28,64 @@ func unquote(name string) string {
 	return name
 }
 
-func isEnv(envs []string, env string) bool {
-	for _, e := range envs {
-		e = strings.TrimSpace(e)
-		if e[1:] == env {
-			return true
-		}
+func matchOS(any interface{}) bool {
+	var envs []string
+	if as, ok := any.([]string); ok {
+		envs = as
+	} else if s, ok := any.(string); ok {
+		envs = []string{s}
+	} else {
+		return false
+	}
+
+	if has(envs, runtime.GOOS) {
+		return true
+	}
+	return false
+}
+func matchEnv(any interface{}) bool {
+	var envs []string
+	if as, ok := any.([]string); ok {
+		envs = as
+	} else if s, ok := any.(string); ok {
+		envs = []string{s}
+	} else {
+		return false
+	}
+
+	switch {
+	case has(envs, "production") && *productionEnv:
+		return true
+	case has(envs, "development") && *developmentEnv:
+		return true
+	case has(envs, "test") && *testEnv:
+		return true
 	}
 	return false
 }
 
-func parseOptions(line string, options map[string]string) {
+func parseOptions(line string, options map[string]interface{}) {
 	ss := re_options.FindAllStringSubmatch(line, -1)
+	re_a := regexp.MustCompile(ax)
 	for _, s := range ss {
-		kvs := strings.Split(strings.TrimSpace(s[0])[1:], "=>")
-		options[strings.TrimSpace(kvs[0])[1:]] = unquote(kvs[1])
+		kvs := strings.SplitN(strings.TrimSpace(s[0])[1:], "=>", 2)
+		kvs[0], kvs[1] = strings.TrimSpace(kvs[0]), strings.TrimSpace(kvs[1])
+		if kvs[1][0] == '[' {
+			as := re_a.FindAllStringSubmatch(kvs[1][1: len(kvs[1])-1], -1)
+			a := []string{}
+			for i := range as {
+				a = append(a, strings.TrimSpace(as[i][0])[1:])
+			}
+			options[kvs[0][1:]] = a
+		} else {
+			options[kvs[0][1:]] = unquote(kvs[1])
+		}
 	}
 }
 
 type Gom struct {
 	name    string
-	options map[string]string
+	options map[string]interface{}
 }
 
 func parseGomfile(filename string) ([]Gom, error) {
@@ -60,6 +99,7 @@ func parseGomfile(filename string) ([]Gom, error) {
 
 	n := 0
 	skip := 0
+	valid := true
 	for {
 		n++
 		lb, _, err := br.ReadLine()
@@ -75,36 +115,35 @@ func parseGomfile(filename string) ([]Gom, error) {
 		}
 
 		name := ""
-		options := make(map[string]string)
+		options := make(map[string]interface{})
 		var items []string
 		if re_group.MatchString(line) {
 			envs := strings.Split(re_group.FindStringSubmatch(line)[1], ",")
-			switch {
-			case isEnv(envs, "production") && *productionEnv:
-				continue
-			case isEnv(envs, "development") && *developmentEnv:
-				continue
-			case isEnv(envs, "test") && *testEnv:
+			for i := range envs {
+				envs[i] = strings.TrimSpace(envs[i])[1:]
+			}
+			if matchEnv(envs) {
+				valid = true
 				continue
 			}
+			valid = false
 			skip++
 			continue
 		} else if re_end.MatchString(line) {
-			if skip > 0 {
-				skip--
+			skip--
+			if !valid && skip < 0 {
+				return nil, fmt.Errorf("Syntax Error at line %d", n)
 			}
+			valid = false
 			continue
 		} else if skip > 0 {
 			continue
-		} else if re_gom1.MatchString(line) && skip == 0 {
-			items = re_gom1.FindStringSubmatch(line)[1:]
-			name = unquote(items[0])
-		} else if re_gom2.MatchString(line) && skip == 0 {
-			items = re_gom2.FindStringSubmatch(line)[1:]
+		} else if re_gom.MatchString(line) {
+			items = re_gom.FindStringSubmatch(line)[1:]
 			name = unquote(items[0])
 			parseOptions(items[1], options)
 		} else {
-			return nil, fmt.Errorf("Failed to parse Gomfile at line %d", n)
+			return nil, fmt.Errorf("Syntax Error at line %d", n)
 		}
 		goms = append(goms, Gom{name, options})
 	}
