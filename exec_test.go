@@ -47,14 +47,21 @@ func TestExec(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	found := ""
+	gopath := ""
 	for _, line := range strings.Split(string(b), "\n") {
 		item := strings.SplitN(line, " ", 2)
 		if len(item) > 1 && strings.HasPrefix(item[1], "GOPATH=") {
-			found = item[1][7:]
+			gopath = item[1][7:]
 		}
 	}
-	if found != vendor {
-		t.Fatalf("Expected %v, but %v:", vendor, found)
+	found := false
+	for _, s := range strings.Split(gopath, string(filepath.ListSeparator)) {
+		if filepath.Clean(s) == filepath.Clean(vendor) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("Expected %v, but %v:", vendor, gopath)
 	}
 }

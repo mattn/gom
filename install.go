@@ -98,7 +98,7 @@ func install(args []string) error {
 			return err
 		}
 	}
-	err = appendenv("GOPATH", vendor)
+	err = appendEnv("GOPATH", vendor)
 	if err != nil {
 		return err
 	}

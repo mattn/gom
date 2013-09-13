@@ -28,9 +28,9 @@ func handleSignal() {
 	}()
 }
 
-func appendenv(key, value string) error {
+func appendEnv(key, value string) error {
 	if oldValue := os.Getenv(key); oldValue != "" {
-		value = fmt.Sprintf("%s:%s", value, oldValue)
+		value = fmt.Sprintf("%s%c%s", value, filepath.ListSeparator, oldValue)
 	}
 	return os.Setenv(key, value)
 }
@@ -56,7 +56,7 @@ func ready() error {
 		}
 		dir = next
 	}
-	err = appendenv("GOPATH", vendor)
+	err = appendEnv("GOPATH", vendor)
 	if err != nil {
 		return err
 	}
