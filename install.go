@@ -32,12 +32,14 @@ func checkout(repo string, commit_or_branch_or_tag string) error {
 	for _, elem := range strings.Split(repo, "/") {
 		p = filepath.Join(p, elem)
 		if isDir(filepath.Join(p, ".git")) {
+			p = filepath.Join(vendor, "src", repo)
 			err = vcsExec(p, "git", "checkout", "-q", commit_or_branch_or_tag)
 			if err != nil {
 				return err
 			}
 			return vcsExec(p, "go", "install")
 		} else if isDir(filepath.Join(p, ".hg")) {
+			p = filepath.Join(vendor, "src", repo)
 			err = vcsExec(p, "hg", "update", commit_or_branch_or_tag)
 			if err != nil {
 				return err
