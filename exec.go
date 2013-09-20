@@ -56,7 +56,7 @@ func ready() error {
 		}
 		dir = next
 	}
-	err = appendEnv("GOPATH", vendor)
+	err = os.Setenv("GOPATH", vendor)
 	if err != nil {
 		return err
 	}

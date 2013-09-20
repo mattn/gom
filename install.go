@@ -23,7 +23,8 @@ func has(c interface{}, key string) bool {
 	return false
 }
 
-func checkout(repo string, commit_or_branch_or_tag string) error {
+func checkout(repo string, commit_or_branch_or_tag string, args []string) error {
+	installCmd := append([]string{"go", "install"}, args...)
 	vendor, err := filepath.Abs("vendor")
 	if err != nil {
 		return err
@@ -37,14 +38,14 @@ func checkout(repo string, commit_or_branch_or_tag string) error {
 			if err != nil {
 				return err
 			}
-			return vcsExec(p, "go", "install")
+			return vcsExec(p, installCmd...)
 		} else if isDir(filepath.Join(p, ".hg")) {
 			p = filepath.Join(vendor, "src", repo)
 			err = vcsExec(p, "hg", "update", commit_or_branch_or_tag)
 			if err != nil {
 				return err
 			}
-			return vcsExec(p, "go", "install")
+			return vcsExec(p, installCmd...)
 		}
 	}
 	return errors.New("gom currently support git/hg for specifying tag/branch/commit")
@@ -100,7 +101,7 @@ func install(args []string) error {
 			return err
 		}
 	}
-	err = appendEnv("GOPATH", vendor)
+	os.Setenv("GOPATH", vendor)
 	if err != nil {
 		return err
 	}
@@ -135,7 +136,7 @@ func install(args []string) error {
 			commit_or_branch_or_tag, _ = gom.options["commit"].(string)
 		}
 		if commit_or_branch_or_tag != "" {
-			err = checkout(gom.name, commit_or_branch_or_tag)
+			err = checkout(gom.name, commit_or_branch_or_tag, args)
 			if err != nil {
 				return err
 			}
