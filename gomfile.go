@@ -74,7 +74,14 @@ func parseOptions(line string, options map[string]interface{}) {
 			as := re_a.FindAllStringSubmatch(kvs[1][1: len(kvs[1])-1], -1)
 			a := []string{}
 			for i := range as {
-				a = append(a, strings.TrimSpace(as[i][0])[1:])
+				it := strings.TrimSpace(as[i][0])
+				if strings.HasPrefix(it, ",") {
+					it = strings.TrimSpace(it[1:])
+				}
+				if strings.HasPrefix(it, ":") {
+					it = strings.TrimSpace(it[1:])
+				}
+				a = append(a, it)
 			}
 			options[kvs[0][1:]] = a
 		} else {
