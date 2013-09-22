@@ -3,12 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
+	"go/build"
 	"os"
-	"path/filepath"
 	"sort"
+	"strings"
 )
 
 const travis_yml = ".travis.yml"
@@ -35,22 +33,11 @@ script:
 	return nil
 }
 
-func scanPackages(filename string) (ret []string) {
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, filename, nil, 0)
-	if err != nil {
-		return
-	}
-	ast.SortImports(fset, f)
-	goroot := os.Getenv("GOROOT")
-	for _, imp := range f.Imports {
-		pkg := unquote(imp.Path.Value)
-		p := filepath.Join(goroot, "src", "pkg", pkg)
-		if _, err = os.Stat(p); err != nil {
-			ret = appendPkg(ret, imp.Path.Value)
-		}
-	}
-	return ret
+//func IsLocalImport(path string) bool {
+
+// http://code.google.com/p/go/source/browse/src/cmd/go/pkg.go?name=go1.1.2#96
+func isStandardImport(path string) bool {
+	return !strings.Contains(path, ".")
 }
 
 func appendPkg(pkgs []string, pkg string) []string {
@@ -60,6 +47,40 @@ func appendPkg(pkgs []string, pkg string) []string {
 		}
 	}
 	return append(pkgs, pkg)
+}
+
+func appendPkgs(pkgs, more []string) []string {
+	for _, pkg := range more {
+		pkgs = appendPkg(pkgs, pkg)
+	}
+	return pkgs
+}
+
+func scanDirectory(path, srcDir string) (ret []string, err error) {
+	pkg, err := build.Import(path, srcDir, build.AllowBinary)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, imp := range pkg.Imports {
+		switch {
+		case isStandardImport(imp):
+			// Ignore standard packages
+		case !build.IsLocalImport(imp):
+			// Add the external package
+			ret = appendPkg(ret, imp)
+			fallthrough
+		default:
+			// Does the recursive walk
+			pkgs, err := scanDirectory(imp, pkg.Dir)
+			if err != nil {
+				return ret, err
+			}
+			ret = appendPkgs(ret, pkgs)
+		}
+	}
+
+	return ret, err
 }
 
 func genGomfile() error {
@@ -73,19 +94,14 @@ func genGomfile() error {
 	}
 	defer f.Close()
 
-	all := []string{}
-	filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-		_, last := filepath.Split(path)
-		if last == "vendor" && info.IsDir() {
-			return filepath.SkipDir
-		}
-		if filepath.Ext(path) == ".go" {
-			for _, pkg := range scanPackages(path) {
-				all = appendPkg(all, unquote(pkg))
-			}
-		}
-		return nil
-	})
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	all, err := scanDirectory(".", dir)
+	if err != nil {
+		return err
+	}
 	sort.Strings(all)
 	for _, pkg := range all {
 		fmt.Fprintf(f, "gom '%s'\n", pkg)
