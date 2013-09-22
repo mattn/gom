@@ -1,0 +1,101 @@
+#compdef gom
+
+_gom() {
+  local context curcontext="$curcontext" state line cmds ret=1
+
+  typeset -a build_flags
+  build_flags=(
+    '-a[force reinstallation of packages that are already up-to-date]'
+    '-n[print the commands but do not run them]'
+    '-p[number of parallel builds]:number'
+    '-race[enable data race detection]'
+    '-x[print the commands]'
+    '-work[print temporary directory name and keep it]'
+    '-ccflags[flags for 5c/6c/8c]:flags'
+    '-gcflags[flags for 5g/6g/8g]:flags'
+    '-ldflags[flags for 5l/6l/8l]:flags'
+    '-gccgoflags[flags for gccgo]:flags'
+    '-compiler[name of compiler to use]:name'
+    '-installsuffix[suffix to add to package directory]:suffix'
+    '-tags[list of build tags to consider satisfied]:tags'
+  )
+
+  _arguments \
+    '1: :->cmds' \
+    '*:: :->args' \
+    && ret=0
+
+  case $state in
+    cmds)
+      _values 'gom commands' \
+        'build[Build with vendor packages]' \
+        'install[Install bundled packages into vendor directory]' \
+        'test[Run tests with bundles]' \
+        'run[Run go file with bundles]' \
+        'doc[Run godoc for bundles]' \
+        'exec[Execute command with bundle environment]' \
+        'gen[Generate .travis.yml or Gomfile]' \
+        && ret=0
+      ;;
+    args)
+      case $line[1] in
+        install)
+          _arguments -s -w : \
+            ${build_flags[@]} \
+            '-v[show package names]' \
+            && ret=0
+          ;;
+        build)
+          _arguments -s -w : \
+            ${build_flags[@]} \
+            '-v[show package names]' \
+            '-o[output file]:file:_files' \
+            '*:file:_path_files -g "*.go"' \
+            && ret=0
+          ;;
+        test)
+          _arguments -s -w : \
+            ${build_flags[@]} \
+            '-c[do not run, compile the test binary]' \
+            '-i[do not run, install dependencies]' \
+            '-v[print test output]' \
+            '-x[print the commands]' \
+            '-short[use short mode]' \
+            '-parallel[number of parallel tests]:number' \
+            '-cpu[values of GOMAXPROCS to use]:number list' \
+            '-run[run tests and examples matching regexp]:regexp' \
+            '-bench[run benchmarks matching regexp]:regexp' \
+            '-benchmem[print memory allocation stats]' \
+            '-benchtime[run each benchmark until taking this long]:duration' \
+            '-blockprofile[write goroutine blocking profile to file]:file' \
+            '-blockprofilerate[set sampling rate of goroutine blocking profile]:number' \
+            '-timeout[kill test after that duration]:duration' \
+            '-cpuprofile[write CPU profile to file]:file:_files' \
+            '-memprofile[write heap profile to file]:file:_files' \
+            '-memprofilerate[set heap profiling rate]:number' \
+            '*:file:_path_files -g "*.go"' \
+            && ret=0
+          ;;
+        run)
+          _arguments -s -w : \
+            ${build_flags[@]} \
+            '*:file:_path_files -g "*.go"' \
+            && ret=0
+          ;;
+        exec)
+          _normal && ret=0
+          ;;
+        gen)
+          _values 'gen commands' \
+            'travis-yml[Generate .travis.yml which uses "gom test"]' \
+            'gomfile[Scan packages and generate Gomfile]' \
+            && ret=0
+          ;;
+      esac
+      ;;
+  esac
+
+  return ret
+}
+
+_gom "$@"
