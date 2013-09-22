@@ -49,15 +49,16 @@ Writing Gomfile and bundle
 
     $ ls
     main.go
-    
-    $ cat > Gomfile
-    gom 'github.com/mattn/go-runewidth', :tag => 'go1'
+
+    $ gom gen gomfile
+
+    $ cat Gomfile
     gom 'github.com/daviddengcn/go-colortext'
-    ^D
-    
+    gom 'github.com/mattn/go-runewidth'
+
     $ gom install
-    installing github.com/mattn/go-runewidth
     installing github.com/daviddengcn/go-colortext
+    installing github.com/mattn/go-runewidth
 
     $ find vendor/src -maxdepth 2
     vendor/src
@@ -67,8 +68,9 @@ Writing Gomfile and bundle
 
     $ gom build
 
-If you want to bundle specified branch or commit
+If you want to bundle specified tag, branch or commit
 
+    gom 'github.com/mattn/go-runewidth', :tag => 'tag_name'
     gom 'github.com/mattn/go-runewidth', :branch => 'branch_name'
     gom 'github.com/mattn/go-runewidth', :commit => 'commit_name'
 
