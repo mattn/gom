@@ -25,7 +25,7 @@ func has(c interface{}, key string) bool {
 
 func checkout(repo string, commit_or_branch_or_tag string, args []string) error {
 	installCmd := append([]string{"go", "install"}, args...)
-	vendor, err := filepath.Abs("vendor")
+	vendor, err := filepath.Abs(".gom")
 	if err != nil {
 		return err
 	}
