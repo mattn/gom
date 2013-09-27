@@ -64,8 +64,10 @@ func TestExec(t *testing.T) {
 		}
 	}
 	found := false
+	vendorInfo, _ := os.Stat(vendor)
 	for _, s := range strings.Split(gopath, string(filepath.ListSeparator)) {
-		if filepath.Clean(s) == filepath.Clean(vendor) {
+		currentInfo, _ := os.Stat(s)
+		if os.SameFile(vendorInfo, currentInfo) {
 			found = true
 			break
 		}
