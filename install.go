@@ -46,9 +46,17 @@ func checkout(repo string, commit_or_branch_or_tag string, args []string) error 
 				return err
 			}
 			return vcsExec(p, installCmd...)
+		} else if isDir(filepath.Join(p, ".bzr")) {
+			p = filepath.Join(vendor, "src", repo)
+			err = vcsExec(p, "bzr", "revert", "-r", commit_or_branch_or_tag)
+			if err != nil {
+				return err
+			}
+			return vcsExec(p, installCmd...)
 		}
 	}
-	return errors.New("gom currently support git/hg for specifying tag/branch/commit")
+	fmt.Printf("Warning: don't know how to checkout for %v", repo)
+	return errors.New("gom currently support git/hg/bzr for specifying tag/branch/commit")
 }
 
 func isFile(p string) bool {
@@ -115,14 +123,27 @@ func install(args []string) error {
 				continue
 			}
 		}
-		var cmdArgs []string
+
 		if command, ok := gom.options["command"].(string); ok {
-			cmdArgs = strings.Split(command, " ")
-		} else {
-			cmdArgs = []string{"go", "get"}
-			cmdArgs = append(cmdArgs, args...)
-			cmdArgs = append(cmdArgs, gom.name)
+			target, ok := gom.options["target"].(string)
+			if !ok {
+				target = gom.name
+			}
+
+			srcdir := filepath.Join(vendor, "src", target)
+			customCmd := strings.Split(command, " ")
+			customCmd = append(customCmd, srcdir)
+
+			fmt.Printf("fetching %s (%v)\n", gom.name, customCmd)
+			err = run(customCmd, Blue)
+			if err != nil {
+				return err
+			}
 		}
+
+		cmdArgs := []string{"go", "get"}
+		cmdArgs = append(cmdArgs, args...)
+		cmdArgs = append(cmdArgs, gom.name)
 
 		fmt.Printf("installing %s\n", gom.name)
 		err = run(cmdArgs, Blue)
