@@ -115,10 +115,16 @@ func install(args []string) error {
 				continue
 			}
 		}
-		cmdArgs := []string{"go", "get"}
+		var cmdArgs []string
+		if command, ok := gom.options["command"].(string); ok {
+			cmdArgs = strings.Split(command, " ")
+		} else {
+			cmdArgs = []string{"go", "get"}
+			cmdArgs = append(cmdArgs, args...)
+			cmdArgs = append(cmdArgs, gom.name)
+		}
+
 		fmt.Printf("installing %s\n", gom.name)
-		cmdArgs = append(cmdArgs, args...)
-		cmdArgs = append(cmdArgs, gom.name)
 		err = run(cmdArgs, Blue)
 		if err != nil {
 			return err
