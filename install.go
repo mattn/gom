@@ -23,40 +23,80 @@ func has(c interface{}, key string) bool {
 	return false
 }
 
-func checkout(repo string, commit_or_branch_or_tag string, args []string) error {
-	installCmd := append([]string{"go", "install"}, args...)
+func (gom *Gom) Clone(args []string) error {
+	vendor, err := filepath.Abs("vendor")
+	if err != nil {
+		return err
+	}
+	if command, ok := gom.options["command"].(string); ok {
+		target, ok := gom.options["target"].(string)
+		if !ok {
+			target = gom.name
+		}
+
+		srcdir := filepath.Join(vendor, "src", target)
+		customCmd := strings.Split(command, " ")
+		customCmd = append(customCmd, srcdir)
+
+		fmt.Printf("fetching %s (%v)\n", gom.name, customCmd)
+		err = run(customCmd, Blue)
+		if err != nil {
+			return err
+		}
+	}
+
+	cmdArgs := []string{"go", "get", "-d"}
+	cmdArgs = append(cmdArgs, args...)
+	cmdArgs = append(cmdArgs, gom.name)
+
+	fmt.Printf("downloading %s\n", gom.name)
+	return run(cmdArgs, Blue)
+}
+
+func (gom *Gom) Checkout() error {
+	commit_or_branch_or_tag := ""
+	if has(gom.options, "branch") {
+		commit_or_branch_or_tag, _ = gom.options["branch"].(string)
+	}
+	if has(gom.options, "tag") {
+		commit_or_branch_or_tag, _ = gom.options["tag"].(string)
+	}
+	if has(gom.options, "commit") {
+		commit_or_branch_or_tag, _ = gom.options["commit"].(string)
+	}
+	if commit_or_branch_or_tag == "" {
+		return nil
+	}
 	vendor, err := filepath.Abs("vendor")
 	if err != nil {
 		return err
 	}
 	p := filepath.Join(vendor, "src")
-	for _, elem := range strings.Split(repo, "/") {
+	for _, elem := range strings.Split(gom.name, "/") {
 		p = filepath.Join(p, elem)
 		if isDir(filepath.Join(p, ".git")) {
-			p = filepath.Join(vendor, "src", repo)
-			err = vcsExec(p, "git", "checkout", "-q", commit_or_branch_or_tag)
-			if err != nil {
-				return err
-			}
-			return vcsExec(p, installCmd...)
+			p = filepath.Join(vendor, "src", gom.name)
+			return vcsExec(p, "git", "checkout", "-q", commit_or_branch_or_tag)
 		} else if isDir(filepath.Join(p, ".hg")) {
-			p = filepath.Join(vendor, "src", repo)
-			err = vcsExec(p, "hg", "update", commit_or_branch_or_tag)
-			if err != nil {
-				return err
-			}
-			return vcsExec(p, installCmd...)
+			p = filepath.Join(vendor, "src", gom.name)
+			return vcsExec(p, "hg", "update", commit_or_branch_or_tag)
 		} else if isDir(filepath.Join(p, ".bzr")) {
-			p = filepath.Join(vendor, "src", repo)
-			err = vcsExec(p, "bzr", "revert", "-r", commit_or_branch_or_tag)
-			if err != nil {
-				return err
-			}
-			return vcsExec(p, installCmd...)
+			p = filepath.Join(vendor, "src", gom.name)
+			return vcsExec(p, "bzr", "revert", "-r", commit_or_branch_or_tag)
 		}
 	}
-	fmt.Printf("Warning: don't know how to checkout for %v", repo)
+	fmt.Printf("Warning: don't know how to checkout for %v\n", gom.name)
 	return errors.New("gom currently support git/hg/bzr for specifying tag/branch/commit")
+}
+
+func (gom *Gom) Build(args []string) error {
+	installCmd := append([]string{"go", "install"}, args...)
+	vendor, err := filepath.Abs("vendor")
+	if err != nil {
+		return err
+	}
+	p := filepath.Join(vendor, "src", gom.name)
+	return vcsExec(p, installCmd...)
 }
 
 func isFile(p string) bool {
@@ -94,7 +134,7 @@ func vcsExec(dir string, args ...string) error {
 }
 
 func install(args []string) error {
-	goms, err := parseGomfile("Gomfile")
+	allGoms, err := parseGomfile("Gomfile")
 	if err != nil {
 		return err
 	}
@@ -113,61 +153,46 @@ func install(args []string) error {
 	if err != nil {
 		return err
 	}
-	for _, gom := range goms {
+
+	// 1. Filter goms to install
+	goms := make([]Gom, 0)
+	for _, gom := range allGoms {
 		if group, ok := gom.options["group"]; ok {
 			if !matchEnv(group) {
 				continue
 			}
-		} else if goos, ok := gom.options["goos"]; ok {
+		}
+		if goos, ok := gom.options["goos"]; ok {
 			if !matchOS(goos) {
 				continue
 			}
 		}
+		goms = append(goms, gom)
+	}
 
-		if command, ok := gom.options["command"].(string); ok {
-			target, ok := gom.options["target"].(string)
-			if !ok {
-				target = gom.name
-			}
-
-			srcdir := filepath.Join(vendor, "src", target)
-			customCmd := strings.Split(command, " ")
-			customCmd = append(customCmd, srcdir)
-
-			fmt.Printf("fetching %s (%v)\n", gom.name, customCmd)
-			err = run(customCmd, Blue)
-			if err != nil {
-				return err
-			}
-		}
-
-		cmdArgs := []string{"go", "get"}
-		cmdArgs = append(cmdArgs, args...)
-		cmdArgs = append(cmdArgs, gom.name)
-
-		fmt.Printf("installing %s\n", gom.name)
-		err = run(cmdArgs, Blue)
+	// 2. Clone the repositories
+	for _, gom := range goms {
+		err = gom.Clone(args)
 		if err != nil {
 			return err
 		}
 	}
+
+	// 3. Checkout the commit/branch/tag if needed
 	for _, gom := range goms {
-		commit_or_branch_or_tag := ""
-		if has(gom.options, "branch") {
-			commit_or_branch_or_tag, _ = gom.options["branch"].(string)
-		}
-		if has(gom.options, "tag") {
-			commit_or_branch_or_tag, _ = gom.options["tag"].(string)
-		}
-		if has(gom.options, "commit") {
-			commit_or_branch_or_tag, _ = gom.options["commit"].(string)
-		}
-		if commit_or_branch_or_tag != "" {
-			err = checkout(gom.name, commit_or_branch_or_tag, args)
-			if err != nil {
-				return err
-			}
+		err = gom.Checkout()
+		if err != nil {
+			return err
 		}
 	}
+
+	// 4. Build and install
+	for _, gom := range goms {
+		err = gom.Build(args)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
