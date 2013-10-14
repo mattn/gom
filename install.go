@@ -94,7 +94,7 @@ func vcsExec(dir string, args ...string) error {
 }
 
 func install(args []string) error {
-	goms, err := parseGomfile("Gomfile")
+	allGoms, err := parseGomfile("Gomfile")
 	if err != nil {
 		return err
 	}
@@ -113,17 +113,21 @@ func install(args []string) error {
 	if err != nil {
 		return err
 	}
-	for _, gom := range goms {
+	goms := make([]Gom, 0)
+	for _, gom := range allGoms {
 		if group, ok := gom.options["group"]; ok {
 			if !matchEnv(group) {
 				continue
 			}
-		} else if goos, ok := gom.options["goos"]; ok {
+		}
+		if goos, ok := gom.options["goos"]; ok {
 			if !matchOS(goos) {
 				continue
 			}
 		}
-
+		goms = append(goms, gom)
+	}
+	for _, gom := range goms {
 		if command, ok := gom.options["command"].(string); ok {
 			target, ok := gom.options["target"].(string)
 			if !ok {
