@@ -9,6 +9,63 @@ import (
 	"strings"
 )
 
+type vcsCmd struct {
+	checkout []string
+	update   []string
+}
+
+var (
+	hg = &vcsCmd{
+		[]string{"hg", "update"},
+		[]string{"hg", "pull"},
+	}
+	git = &vcsCmd{
+		[]string{"git", "checkout", "-q"},
+		[]string{"git", "fetch"},
+	}
+	bzr = &vcsCmd{
+		[]string{"bzr", "revert", "-r"},
+		[]string{"bzr", "pull"},
+	}
+)
+
+func (vcs *vcsCmd) Checkout(p, destination string) error {
+	args := append(vcs.checkout, destination)
+	return vcsExec(p, args...)
+}
+
+func (vcs *vcsCmd) Update(p string) error {
+	return vcsExec(p, vcs.update...)
+}
+
+func (vcs *vcsCmd) Sync(p, destination string) error {
+	err := vcs.Checkout(p, destination)
+	if err != nil {
+		err = vcs.Update(p)
+		if err != nil {
+			return err
+		}
+		err = vcs.Checkout(p, destination)
+	}
+	return err
+}
+
+func vcsExec(dir string, args ...string) error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	err = os.Chdir(dir)
+	if err != nil {
+		return err
+	}
+	defer os.Chdir(cwd)
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
 func has(c interface{}, key string) bool {
 	if m, ok := c.(map[string]interface{}); ok {
 		_, ok := m[key]
@@ -73,16 +130,18 @@ func (gom *Gom) Checkout() error {
 	}
 	p := filepath.Join(vendor, "src")
 	for _, elem := range strings.Split(gom.name, "/") {
+		var vcs *vcsCmd
 		p = filepath.Join(p, elem)
 		if isDir(filepath.Join(p, ".git")) {
-			p = filepath.Join(vendor, "src", gom.name)
-			return vcsExec(p, "git", "checkout", "-q", commit_or_branch_or_tag)
+			vcs = git
 		} else if isDir(filepath.Join(p, ".hg")) {
-			p = filepath.Join(vendor, "src", gom.name)
-			return vcsExec(p, "hg", "update", commit_or_branch_or_tag)
+			vcs = hg
 		} else if isDir(filepath.Join(p, ".bzr")) {
+			vcs = bzr
+		}
+		if vcs != nil {
 			p = filepath.Join(vendor, "src", gom.name)
-			return vcsExec(p, "bzr", "revert", "-r", commit_or_branch_or_tag)
+			return vcs.Sync(p, commit_or_branch_or_tag)
 		}
 	}
 	fmt.Printf("Warning: don't know how to checkout for %v\n", gom.name)
@@ -111,26 +170,6 @@ func isDir(p string) bool {
 		return true
 	}
 	return false
-}
-
-func vcsExec(dir string, args ...string) error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	err = os.Chdir(dir)
-	if err != nil {
-		return err
-	}
-	defer os.Chdir(cwd)
-	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if cmd.Process == nil {
-		return err
-	}
-	return nil
 }
 
 func install(args []string) error {
