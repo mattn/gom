@@ -42,10 +42,6 @@ Generate .travis.yml that uses `gom test`
 
     gom gen-travis-yml
 
-Use the network to update to update some packages
-
-    gom install -u
-
 Tutorial
 --------
 
