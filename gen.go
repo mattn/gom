@@ -14,7 +14,7 @@ const travis_yml = ".travis.yml"
 func genTravisYml() error {
 	_, err := os.Stat(travis_yml)
 	if err == nil {
-		return errors.New(".travis.yml is already exists")
+		return errors.New(".travis.yml already exists")
 	}
 	f, err := os.Create(travis_yml)
 	if err != nil {
@@ -32,8 +32,6 @@ script:
 `)
 	return nil
 }
-
-//func IsLocalImport(path string) bool {
 
 // http://code.google.com/p/go/source/browse/src/cmd/go/pkg.go?name=go1.1.2#96
 func isStandardImport(path string) bool {
@@ -86,7 +84,7 @@ func scanDirectory(path, srcDir string) (ret []string, err error) {
 func genGomfile() error {
 	_, err := os.Stat("Gomfile")
 	if err == nil {
-		return errors.New("Gomfile is already exists")
+		return errors.New("Gomfile already exists")
 	}
 	f, err := os.Create("Gomfile")
 	if err != nil {
