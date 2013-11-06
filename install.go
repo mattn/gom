@@ -107,17 +107,17 @@ func (gom *Gom) Clone(args []string) error {
 				target = gom.name
 			}
 			srcdir := filepath.Join(vendor, "src", target)
-      if _, err := os.Stat(srcdir); err != nil {
-        if os.IsExist(err) {
-          if err := gom.pullPrivate(srcdir); err != nil {
-            return err
-          }
-        } else {
-          if err := gom.clonePrivate(srcdir); err != nil {
-            return err
-          }
-        }
-      }
+			if _, err := os.Stat(srcdir); err != nil {
+				if os.IsExist(err) {
+					if err := gom.pullPrivate(srcdir); err != nil {
+						return err
+					}
+				} else {
+					if err := gom.clonePrivate(srcdir); err != nil {
+						return err
+					}
+				}
+			}
 		}
 	}
 
@@ -131,15 +131,15 @@ func (gom *Gom) Clone(args []string) error {
 
 func (gom *Gom) pullPrivate(srcdir string) (err error) {
 	fmt.Printf("fetching private repo %s\n", gom.name)
-  pullCmd := fmt.Sprintf("git --work-tree=%s, --git-dir=%s/.git pull origin",
-    srcdir, srcdir)
-  pullArgs := strings.Split(pullCmd, " ")
+	pullCmd := fmt.Sprintf("git --work-tree=%s, --git-dir=%s/.git pull origin",
+		srcdir, srcdir)
+	pullArgs := strings.Split(pullCmd, " ")
 	err = run(pullArgs, Blue)
 	if err != nil {
 		return
 	}
 
-  return
+	return
 }
 
 func (gom *Gom) clonePrivate(srcdir string) (err error) {
@@ -153,7 +153,7 @@ func (gom *Gom) clonePrivate(srcdir string) (err error) {
 		return
 	}
 
-  return
+	return
 }
 
 func (gom *Gom) Checkout() error {
