@@ -100,6 +100,32 @@ func (gom *Gom) Clone(args []string) error {
 		if err != nil {
 			return err
 		}
+	} else if private, ok := gom.options["private"].(string); ok {
+		if private == "true" {
+			target, ok := gom.options["target"].(string)
+			if !ok {
+				target = gom.name
+			}
+			name := strings.Split(gom.name, "/")
+			privateUrl := fmt.Sprintf("git@%s:%s/%s", name[0], name[1], name[2])
+
+			srcdir := filepath.Join(vendor, "src", target)
+			cloneCmd := []string{"git", "clone", privateUrl, srcdir}
+
+			rmCmd := []string{"rm", "-rf", srcdir}
+			fmt.Printf("cleaning private repo source %s\n", gom.name)
+			err = run(rmCmd, Blue)
+			if err != nil {
+				fmt.Printf("could not remove existing source")
+				return err
+			}
+
+			fmt.Printf("fetching private repo %s\n", gom.name)
+			err = run(cloneCmd, Blue)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	cmdArgs := []string{"go", "get", "-d"}
