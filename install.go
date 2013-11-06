@@ -100,6 +100,25 @@ func (gom *Gom) Clone(args []string) error {
 		if err != nil {
 			return err
 		}
+	} else if private, ok := gom.options["private"].(string); ok {
+		if private == "true" {
+			target, ok := gom.options["target"].(string)
+			if !ok {
+				target = gom.name
+			}
+			srcdir := filepath.Join(vendor, "src", target)
+			if _, err := os.Stat(srcdir); err != nil {
+				if os.IsExist(err) {
+					if err := gom.pullPrivate(srcdir); err != nil {
+						return err
+					}
+				} else {
+					if err := gom.clonePrivate(srcdir); err != nil {
+						return err
+					}
+				}
+			}
+		}
 	}
 
 	cmdArgs := []string{"go", "get", "-d"}
@@ -108,6 +127,33 @@ func (gom *Gom) Clone(args []string) error {
 
 	fmt.Printf("downloading %s\n", gom.name)
 	return run(cmdArgs, Blue)
+}
+
+func (gom *Gom) pullPrivate(srcdir string) (err error) {
+	fmt.Printf("fetching private repo %s\n", gom.name)
+	pullCmd := fmt.Sprintf("git --work-tree=%s, --git-dir=%s/.git pull origin",
+		srcdir, srcdir)
+	pullArgs := strings.Split(pullCmd, " ")
+	err = run(pullArgs, Blue)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (gom *Gom) clonePrivate(srcdir string) (err error) {
+	name := strings.Split(gom.name, "/")
+	privateUrl := fmt.Sprintf("git@%s:%s/%s", name[0], name[1], name[2])
+
+	fmt.Printf("fetching private repo %s\n", gom.name)
+	cloneCmd := []string{"git", "clone", privateUrl, srcdir}
+	err = run(cloneCmd, Blue)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func (gom *Gom) Checkout() error {
