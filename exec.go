@@ -56,6 +56,7 @@ func ready() error {
 		}
 		dir = next
 	}
+	vendor += string(filepath.ListSeparator) + os.Getenv("GOPATH")
 	err = os.Setenv("GOPATH", vendor)
 	if err != nil {
 		return err
