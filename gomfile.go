@@ -137,9 +137,11 @@ func parseGomfile(filename string) ([]Gom, error) {
 			skip++
 			continue
 		} else if re_end.MatchString(line) {
-			skip--
-			if !valid && skip < 0 {
-				return nil, fmt.Errorf("Syntax Error at line %d", n)
+			if !valid {
+				skip--
+				if skip < 0 {
+					return nil, fmt.Errorf("Syntax Error at line %d", n)
+				}
 			}
 			valid = false
 			continue

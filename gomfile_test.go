@@ -80,3 +80,32 @@ gom 'github.com/mattn/go-gtk', :foobar => 'barbaz'
 		t.Fatalf("Expected %v, but %v:", expected, goms)
 	}
 }
+
+func TestGomfile4(t *testing.T) {
+	filename, err := tempGomfile(`
+group :development do
+	gom 'github.com/mattn/go-sqlite3', :tag => '3.14', :commit => 'asdfasdf'
+end
+
+group :test do
+	gom 'github.com/mattn/go-gtk', :foobar => 'barbaz'
+end
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	*developmentEnv = true
+	goms, err := parseGomfile(filename)
+	*developmentEnv = false
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := []Gom{
+		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf"}},
+	}
+	if !reflect.DeepEqual(goms, expected) {
+		t.Fatalf("Expected %v, but %v:", expected, goms)
+	}
+}
