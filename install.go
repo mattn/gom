@@ -81,7 +81,7 @@ func has(c interface{}, key string) bool {
 }
 
 func (gom *Gom) Clone(args []string) error {
-	vendor, err := filepath.Abs("vendor")
+	vendor, err := filepath.Abs("_vendor")
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (gom *Gom) Checkout() error {
 	if commit_or_branch_or_tag == "" {
 		return nil
 	}
-	vendor, err := filepath.Abs("vendor")
+	vendor, err := filepath.Abs("_vendor")
 	if err != nil {
 		return err
 	}
@@ -196,7 +196,7 @@ func (gom *Gom) Checkout() error {
 
 func (gom *Gom) Build(args []string) error {
 	installCmd := append([]string{"go", "install"}, args...)
-	vendor, err := filepath.Abs("vendor")
+	vendor, err := filepath.Abs("_vendor")
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func install(args []string) error {
 	if err != nil {
 		return err
 	}
-	vendor, err := filepath.Abs("vendor")
+	vendor, err := filepath.Abs("_vendor")
 	if err != nil {
 		return err
 	}

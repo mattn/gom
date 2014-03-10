@@ -28,8 +28,8 @@ _gom() {
   case $state in
     cmds)
       _values 'gom commands' \
-        'build[Build with vendor packages]' \
-        'install[Install bundled packages into vendor directory]' \
+        'build[Build with _vendor packages]' \
+        'install[Install bundled packages into _vendor directory]' \
         'test[Run tests with bundles]' \
         'run[Run go file with bundles]' \
         'doc[Run godoc for bundles]' \

@@ -9,8 +9,8 @@ import (
 func usage() {
 	fmt.Printf(`Usage of %s:
  Tasks:
-   gom build   [options]   : Build with vendor packages
-   gom install [options]   : Install bundled packages into vendor directory
+   gom build   [options]   : Build with _vendor packages
+   gom install [options]   : Install bundled packages into _vendor directory
    gom test    [options]   : Run tests with bundles
    gom run     [options]   : Run go file with bundles
    gom doc     [options]   : Run godoc for bundles

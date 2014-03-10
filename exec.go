@@ -40,14 +40,14 @@ func ready() error {
 	if err != nil {
 		return err
 	}
-	vendor, err := filepath.Abs("vendor")
+	vendor, err := filepath.Abs("_vendor")
 	if err != nil {
 		return err
 	}
 	for {
 		file := filepath.Join(dir, "Gomfile")
 		if isFile(file) {
-			vendor = filepath.Join(dir, "vendor")
+			vendor = filepath.Join(dir, "_vendor")
 			break
 		}
 		next := filepath.Clean(filepath.Join(dir, ".."))
