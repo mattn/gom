@@ -28,13 +28,6 @@ func handleSignal() {
 	}()
 }
 
-func appendEnv(key, value string) error {
-	if oldValue := os.Getenv(key); oldValue != "" {
-		value = fmt.Sprintf("%s%c%s", value, filepath.ListSeparator, oldValue)
-	}
-	return os.Setenv(key, value)
-}
-
 func ready() error {
 	dir, err := os.Getwd()
 	if err != nil {
