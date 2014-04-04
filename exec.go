@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/daviddengcn/go-colortext"
 	"os"
 	"os/exec"
@@ -26,13 +25,6 @@ func handleSignal() {
 		ct.ResetColor()
 		os.Exit(0)
 	}()
-}
-
-func appendEnv(key, value string) error {
-	if oldValue := os.Getenv(key); oldValue != "" {
-		value = fmt.Sprintf("%s%c%s", value, filepath.ListSeparator, oldValue)
-	}
-	return os.Setenv(key, value)
 }
 
 func ready() error {
