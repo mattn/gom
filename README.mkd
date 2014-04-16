@@ -73,6 +73,10 @@ If you want to bundle specified tag, branch or commit
     gom 'github.com/mattn/go-runewidth', :tag => 'tag_name'
     gom 'github.com/mattn/go-runewidth', :branch => 'branch_name'
     gom 'github.com/mattn/go-runewidth', :commit => 'commit_name'
+    
+If you want to bundle a repository that `go get` can't access
+
+    gom 'github.com/username/repository', :command => 'git clone http://example.com/repository.git'
 
 Todo
 ----
