@@ -10,7 +10,8 @@ func usage() {
 	fmt.Printf(`Usage of %s:
  Tasks:
    gom build   [options]   : Build with _vendor packages
-   gom install [options]   : Install bundled packages into _vendor directory
+   gom install [options]   : Install bundled packages into _vendor directory, by default.
+                              GOM_VENDOR_NAME=. gom install [options], for regular src folder.
    gom test    [options]   : Run tests with bundles
    gom run     [options]   : Run go file with bundles
    gom doc     [options]   : Run godoc for bundles
@@ -25,6 +26,7 @@ func usage() {
 var productionEnv = flag.Bool("production", false, "production environment")
 var developmentEnv = flag.Bool("development", false, "development environment")
 var testEnv = flag.Bool("test", false, "test environment")
+var vendorFolder string
 
 func main() {
 	flag.Usage = usage
@@ -36,6 +38,12 @@ func main() {
 
 	if !*productionEnv && !*developmentEnv && !*testEnv {
 		*developmentEnv = true
+	}
+
+	if len(os.Getenv("GOM_VENDOR_NAME")) > 0 {
+		vendorFolder = os.Getenv("GOM_VENDOR_NAME")
+	} else {
+		vendorFolder = "_vendor"
 	}
 
 	var err error
