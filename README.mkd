@@ -42,6 +42,13 @@ Generate .travis.yml that uses `gom test`
 
     gom gen-travis-yml
 
+You can always change the name relative to the current `$GOPATH` directory using an environment variable: `GOM_VENDOR_NAME`
+
+```bash
+$ # to use a regular $GOPATH/src folder you should specify GOM_VENDOR_NAME equal '.'
+$ GOM_VENDOR_NAME=. gom <command>
+```
+
 Tutorial
 --------
 
