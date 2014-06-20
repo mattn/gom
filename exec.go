@@ -39,9 +39,9 @@ func ready() error {
 	for {
 		file := filepath.Join(dir, "Gomfile")
 		if isFile(file) {
-			vendor = dir +
+			vendor = filepath.Join(dir, vendorFolder) +
 				string(filepath.ListSeparator) +
-				filepath.Join(dir, vendorFolder)
+				dir
 			break
 		}
 		next := filepath.Clean(filepath.Join(dir, ".."))
