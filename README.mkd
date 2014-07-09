@@ -40,7 +40,7 @@ Run tests on current directory with \_vendor packages
 
 Generate .travis.yml that uses `gom test`
 
-    gom gen-travis-yml
+    gom gen travis-yml
 
 You can always change the name relative to the current `$GOPATH` directory using an environment variable: `GOM_VENDOR_NAME`
 
