@@ -22,12 +22,12 @@ Gomfile
     gom 'github.com/mattn/go-scan', :commit => 'ecb144fb1f2848a24ebfdadf8e64380406d87206'
     gom 'github.com/daviddengcn/go-colortext'
     gom 'github.com/mattn/go-ole', :goos => 'windows'
-    group :sqlite do
+    group :test do
         gom 'github.com/mattn/go-sqlite3'
     end
     
 By default `gom install` install all packages, except those in the listed groups.
-You can install packages from groups using flags: `gom -sqlite install`
+You can install packages from groups using flags (`development`, `test` & `production`) : `gom -test install`
 
 Usage
 -----
