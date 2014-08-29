@@ -110,6 +110,10 @@ func (gom *Gom) Clone(args []string) error {
 		}
 
 		srcdir := filepath.Join(vendor, "src", target)
+		if err := os.MkdirAll(srcdir, 0755); err != nil {
+			return err
+		}
+
 		customCmd := strings.Split(command, " ")
 		customCmd = append(customCmd, srcdir)
 
@@ -126,14 +130,15 @@ func (gom *Gom) Clone(args []string) error {
 			}
 			srcdir := filepath.Join(vendor, "src", target)
 			if _, err := os.Stat(srcdir); err != nil {
-				if os.IsExist(err) {
-					if err := gom.pullPrivate(srcdir); err != nil {
-						return err
-					}
-				} else {
-					if err := gom.clonePrivate(srcdir); err != nil {
-						return err
-					}
+				if err := os.MkdirAll(srcdir, 0755); err != nil {
+					return err
+				}
+				if err := gom.clonePrivate(srcdir); err != nil {
+					return err
+				}
+			} else {
+				if err := gom.pullPrivate(srcdir); err != nil {
+					return err
 				}
 			}
 		}
