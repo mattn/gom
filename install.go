@@ -136,7 +136,7 @@ func (gom *Gom) Clone(args []string) error {
 			return err
 		}
 	} else if private, ok := gom.options["private"].(string); ok {
-		if private == "true" {
+		if boolString[strings.ToLower(private)] {
 			target, ok := gom.options["target"].(string)
 			if !ok {
 				target = gom.name
