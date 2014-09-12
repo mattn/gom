@@ -29,6 +29,23 @@ var (
 	}
 )
 
+var (
+	boolString = map[string]bool{
+		"t":     true,
+		"true":  true,
+		"y":     true,
+		"yes":   true,
+		"on":    true,
+		"1":     true,
+		"f":     false,
+		"false": false,
+		"n":     false,
+		"no":    false,
+		"off":   false,
+		"0":     false,
+	}
+)
+
 func (vcs *vcsCmd) Checkout(p, destination string) error {
 	args := append(vcs.checkout, destination)
 	return vcsExec(p, args...)
@@ -113,7 +130,11 @@ func (gom *Gom) Clone(args []string) error {
 						return err
 					}
 				} else {
-					if err := gom.clonePrivate(srcdir); err != nil {
+					useHttps := false
+					if possible, ok := gom.options["https"].(string); ok {
+						useHttps = boolString[strings.ToLower(possible)]
+					}
+					if err := gom.clonePrivate(srcdir, useHttps); err != nil {
 						return err
 					}
 				}
@@ -142,9 +163,14 @@ func (gom *Gom) pullPrivate(srcdir string) (err error) {
 	return
 }
 
-func (gom *Gom) clonePrivate(srcdir string) (err error) {
-	name := strings.Split(gom.name, "/")
-	privateUrl := fmt.Sprintf("git@%s:%s/%s", name[0], name[1], name[2])
+func (gom *Gom) clonePrivate(srcdir string, useHttps bool) (err error) {
+	var privateUrl string
+	if useHttps {
+		privateUrl = fmt.Sprintf("https://%s.git", gom.name)
+	} else {
+		name := strings.Split(gom.name, "/")
+		privateUrl = fmt.Sprintf("git@%s:%s/%s", name[0], name[1], name[2])
+	}
 
 	fmt.Printf("fetching private repo %s\n", gom.name)
 	cloneCmd := []string{"git", "clone", privateUrl, srcdir}
