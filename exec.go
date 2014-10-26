@@ -60,6 +60,7 @@ func ready() error {
 
 var stdout = os.Stdout
 var stderr = os.Stderr
+var stdin  = os.Stdin
 
 func run(args []string, c Color) error {
 	if err := ready(); err != nil {
@@ -71,6 +72,7 @@ func run(args []string, c Color) error {
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
+	cmd.Stdin  = stdin
 	ct.ChangeColor(ct.Color(c), true, ct.None, false)
 	err := cmd.Run()
 	ct.ResetColor()
