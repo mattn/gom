@@ -16,6 +16,7 @@ func usage() {
    gom run     [options]   : Run go file with bundles
    gom doc     [options]   : Run godoc for bundles
    gom exec    [arguments] : Execute command with bundle environment
+   gom tool [options]      : Run go tool with bundles
    gom gen travis-yml      : Generate .travis.yml which uses "gom test"
    gom gen gomfile         : Scan packages from current directory as root
                               recursively, and generate Gomfile
@@ -62,6 +63,8 @@ func main() {
 		err = run(append([]string{"godoc"}, subArgs...), None)
 	case "exec", "e":
 		err = run(subArgs, None)
+	case "tool":
+		err = run(append([]string{"go", "tool"}, subArgs...), None)
 	case "gen", "g":
 		switch flag.Arg(1) {
 		case "travis-yml":
