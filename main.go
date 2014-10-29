@@ -19,6 +19,7 @@ func usage() {
    gom gen travis-yml      : Generate .travis.yml which uses "gom test"
    gom gen gomfile         : Scan packages from current directory as root
                               recursively, and generate Gomfile
+   gom tool [options]      : Run go tool with bundles
 `, os.Args[0])
 	os.Exit(1)
 }
@@ -70,6 +71,8 @@ func main() {
 		default:
 			usage()
 		}
+	case "tool":
+		err = run(append([]string{"go", "tool"}, subArgs...), None)
 	default:
 		usage()
 	}
