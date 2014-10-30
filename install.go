@@ -27,7 +27,7 @@ var (
 	git = &vcsCmd{
 		[]string{"git", "checkout", "-q"},
 		[]string{"git", "fetch"},
-		[]string{"git", "log", "-1", "--pretty=%H"},
+		[]string{"git", "rev-parse", "HEAD"},
 		"^(.+)$",
 	}
 	bzr = &vcsCmd{
