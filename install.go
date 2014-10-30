@@ -6,26 +6,35 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
 type vcsCmd struct {
-	checkout []string
-	update   []string
+	checkout     []string
+	update       []string
+	revision     []string
+	revisionMask string
 }
 
 var (
 	hg = &vcsCmd{
 		[]string{"hg", "update"},
 		[]string{"hg", "pull"},
+		[]string{"hg", "id", "-i"},
+		"^(.+)$",
 	}
 	git = &vcsCmd{
 		[]string{"git", "checkout", "-q"},
 		[]string{"git", "fetch"},
+		[]string{"git", "log", "-1", "--pretty=%H"},
+		"^(.+)$",
 	}
 	bzr = &vcsCmd{
 		[]string{"bzr", "revert", "-r"},
 		[]string{"bzr", "pull"},
+		[]string{"bzr", "log", "-r-1", "--line"},
+		"^([0-9]+)",
 	}
 )
 
@@ -36,6 +45,23 @@ func (vcs *vcsCmd) Checkout(p, destination string) error {
 
 func (vcs *vcsCmd) Update(p string) error {
 	return vcsExec(p, vcs.update...)
+}
+
+func (vcs *vcsCmd) Revision(dir string) (string, error) {
+	args := append(vcs.revision)
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Dir = dir
+	cmd.Stderr = os.Stderr
+	b, err := cmd.Output()
+	if err != nil {
+		println(err.Error())
+		return "", err
+	}
+	rev := strings.TrimSpace(string(b))
+	if vcs.revisionMask != "" {
+		return regexp.MustCompile(vcs.revisionMask).FindString(rev), nil
+	}
+	return rev, nil
 }
 
 func (vcs *vcsCmd) Sync(p, destination string) error {
@@ -51,16 +77,8 @@ func (vcs *vcsCmd) Sync(p, destination string) error {
 }
 
 func vcsExec(dir string, args ...string) error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	err = os.Chdir(dir)
-	if err != nil {
-		return err
-	}
-	defer os.Chdir(cwd)
 	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Dir = dir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

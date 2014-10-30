@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/build"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -104,5 +105,63 @@ func genGomfile() error {
 	for _, pkg := range all {
 		fmt.Fprintf(f, "gom '%s'\n", pkg)
 	}
+	return nil
+}
+
+func genGomfileLock() error {
+	allGoms, err := parseGomfile("Gomfile")
+	if err != nil {
+		return err
+	}
+	vendor, err := filepath.Abs(vendorFolder)
+	if err != nil {
+		return err
+	}
+	goms := make([]Gom, 0)
+	for _, gom := range allGoms {
+		if group, ok := gom.options["group"]; ok {
+			if !matchEnv(group) {
+				continue
+			}
+		}
+		if goos, ok := gom.options["goos"]; ok {
+			if !matchOS(goos) {
+				continue
+			}
+		}
+		goms = append(goms, gom)
+	}
+
+	for _, gom := range goms {
+		var vcs *vcsCmd
+		p := filepath.Join(vendor, "src", gom.name)
+		if isDir(filepath.Join(p, ".git")) {
+			vcs = git
+		} else if isDir(filepath.Join(p, ".hg")) {
+			vcs = hg
+		} else if isDir(filepath.Join(p, ".bzr")) {
+			vcs = bzr
+		}
+		if vcs != nil {
+			rev, err := vcs.Revision(p)
+			if err == nil && rev != "" {
+				gom.options["commit"] = rev
+			}
+
+		}
+	}
+	f, err := os.Create("Gomfile.lock")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	for _, gom := range goms {
+		if rev, ok := gom.options["commit"]; ok {
+			fmt.Fprintf(f, "gom '%s', :commit => '%s'\n", gom.name, rev.(string))
+		} else {
+			fmt.Fprintf(f, "gom '%s'\n", gom.name)
+		}
+	}
+	fmt.Println("Gomfile.lock is generated")
 	return nil
 }
