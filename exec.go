@@ -53,10 +53,6 @@ func ready() error {
 	p := os.Getenv("PATH")
 	p += string(filepath.ListSeparator) + filepath.Join(vendor, "bin")
 	err = os.Setenv("PATH", p)
-	err = os.Setenv("GOPATH", vendor)
-	if err != nil {
-		return err
-	}
 
 	vendor += string(filepath.ListSeparator) + os.Getenv("GOPATH")
 	err = os.Setenv("GOPATH", vendor)
