@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func usage() {
@@ -28,6 +29,8 @@ func usage() {
 var productionEnv = flag.Bool("production", false, "production environment")
 var developmentEnv = flag.Bool("development", false, "development environment")
 var testEnv = flag.Bool("test", false, "test environment")
+var customGroups = flag.String("groups", "", "comma-separated list of Gomfile groups")
+var customGroupList []string
 var vendorFolder string
 
 func main() {
@@ -41,6 +44,8 @@ func main() {
 	if !*productionEnv && !*developmentEnv && !*testEnv {
 		*developmentEnv = true
 	}
+
+	customGroupList = strings.Split(*customGroups, ",")
 
 	if len(os.Getenv("GOM_VENDOR_NAME")) > 0 {
 		vendorFolder = os.Getenv("GOM_VENDOR_NAME")
