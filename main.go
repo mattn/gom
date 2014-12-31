@@ -17,7 +17,7 @@ func usage() {
    gom doc     [options]   : Run godoc for bundles
    gom exec    [arguments] : Execute command with bundle environment
    gom tool    [options]   : Run go tool with bundles
-   gom tool    [arguments] : Run go fmt
+   gom fmt     [arguments] : Run go fmt
    gom gen travis-yml      : Generate .travis.yml which uses "gom test"
    gom gen gomfile         : Scan packages from current directory as root
                               recursively, and generate Gomfile
