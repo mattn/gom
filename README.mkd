@@ -89,7 +89,7 @@ If you want to bundle specified tag, branch or commit
     
 If you want to bundle a repository that `go get` can't access
 
-    gom 'github.com/username/repository', :command => 'git clone http://example.com/repository.git'
+    gom 'github.com/username/repository', :command => 'git clone http://example.com/repository.git', :update => 'git fetch'
 
 Todo
 ----
