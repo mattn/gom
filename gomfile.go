@@ -61,6 +61,13 @@ func matchEnv(any interface{}) bool {
 	case has(envs, "test") && *testEnv:
 		return true
 	}
+
+	for _, g := range customGroupList {
+		if has(envs, g) {
+			return true
+		}
+	}
+
 	return false
 }
 

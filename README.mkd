@@ -22,12 +22,21 @@ Gomfile
     gom 'github.com/mattn/go-scan', :commit => 'ecb144fb1f2848a24ebfdadf8e64380406d87206'
     gom 'github.com/daviddengcn/go-colortext'
     gom 'github.com/mattn/go-ole', :goos => 'windows'
+
+    # Execute only in the "test" environment.
     group :test do
         gom 'github.com/mattn/go-sqlite3'
     end
+
+    # Execute only for the "custom_group" group.
+    group :custom_group do
+        gom 'github.com/golang/lint/golint'
+    end
     
 By default `gom install` install all packages, except those in the listed groups.
-You can install packages from groups using flags (`development`, `test` & `production`) : `gom -test install`
+You can install packages from groups based on the environment using flags (`development`, `test` & `production`) : `gom -test install`
+
+Custom groups my be specified using the -groups flag : `gom -test -groups=custom_group,special install`
 
 Usage
 -----

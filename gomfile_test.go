@@ -109,3 +109,45 @@ end
 		t.Fatalf("Expected %v, but %v:", expected, goms)
 	}
 }
+
+func TestGomfile5(t *testing.T) {
+	filename, err := tempGomfile(`
+group :custom_one do
+	gom 'github.com/mattn/go-sqlite3', :tag => '3.14', :commit => 'asdfasdf'
+end
+
+group :custom_two do
+	gom 'github.com/mattn/go-gtk', :foobar => 'barbaz'
+end
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	customGroupList = []string{"custom_one", "custom_two"}
+	goms, err := parseGomfile(filename)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := []Gom{
+		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf"}},
+		{name: "github.com/mattn/go-gtk", options: map[string]interface{}{"foobar": "barbaz"}},
+	}
+	if !reflect.DeepEqual(goms, expected) {
+		t.Fatalf("Expected %v, but %v:", expected, goms)
+	}
+
+	customGroupList = []string{"custom_one"}
+	goms, err = parseGomfile(filename)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected = []Gom{
+		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf"}},
+	}
+	if !reflect.DeepEqual(goms, expected) {
+		t.Fatalf("Expected %v, but %v:", expected, goms)
+	}
+}
