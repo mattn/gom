@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 )
 
@@ -32,16 +33,16 @@ func ready() error {
 	if err != nil {
 		return err
 	}
+
 	vendor, err := filepath.Abs(vendorFolder)
 	if err != nil {
 		return err
 	}
+
 	for {
 		file := filepath.Join(dir, "Gomfile")
 		if isFile(file) {
-			vendor = filepath.Join(dir, vendorFolder) +
-				string(filepath.ListSeparator) +
-				dir
+			vendor = filepath.Join(dir, vendorFolder)
 			break
 		}
 		next := filepath.Clean(filepath.Join(dir, ".."))
@@ -50,15 +51,24 @@ func ready() error {
 		}
 		dir = next
 	}
-	p := os.Getenv("PATH")
-	p += string(filepath.ListSeparator) + filepath.Join(vendor, "bin")
-	err = os.Setenv("PATH", p)
 
-	vendor += string(filepath.ListSeparator) + os.Getenv("GOPATH")
+	binPath := os.Getenv("PATH") +
+		string(filepath.ListSeparator) +
+		filepath.Join(vendor, "bin")
+	err = os.Setenv("PATH", binPath)
+	if err != nil {
+		return err
+	}
+
+	vendor = strings.Join(
+		[]string{vendor, dir, os.Getenv("GOPATH")},
+		string(filepath.ListSeparator),
+	)
 	err = os.Setenv("GOPATH", vendor)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
