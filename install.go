@@ -256,6 +256,10 @@ func install(args []string) error {
 	if err != nil {
 		return err
 	}
+	err = os.Setenv("GOBIN", filepath.Join(vendor, "bin"))
+	if err != nil {
+		return err
+	}
 
 	// 1. Filter goms to install
 	goms := make([]Gom, 0)
