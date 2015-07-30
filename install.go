@@ -38,6 +38,23 @@ var (
 	}
 )
 
+var (
+	boolString = map[string]bool{
+		"t":     true,
+		"true":  true,
+		"y":     true,
+		"yes":   true,
+		"on":    true,
+		"1":     true,
+		"f":     false,
+		"false": false,
+		"n":     false,
+		"no":    false,
+		"off":   false,
+		"0":     false,
+	}
+)
+
 func (vcs *vcsCmd) Checkout(p, destination string) error {
 	args := append(vcs.checkout, destination)
 	return vcsExec(p, args...)
@@ -103,35 +120,33 @@ func (gom *Gom) Clone(args []string) error {
 	if err != nil {
 		return err
 	}
+	name := getFork(gom)
 	if command, ok := gom.options["command"].(string); ok {
-		target, ok := gom.options["target"].(string)
-		if !ok {
-			target = gom.name
-		}
-
-		srcdir := filepath.Join(vendor, "src", target)
+		srcdir := filepath.Join(vendor, "src", name)
 		customCmd := strings.Split(command, " ")
 		customCmd = append(customCmd, srcdir)
 
-		fmt.Printf("fetching %s (%v)\n", gom.name, customCmd)
+		fmt.Printf("fetching %s (%v)\n", name, customCmd)
 		err = run(customCmd, Blue)
 		if err != nil {
 			return err
 		}
 	} else if private, ok := gom.options["private"].(string); ok {
-		if private == "true" {
-			target, ok := gom.options["target"].(string)
-			if !ok {
-				target = gom.name
-			}
-			srcdir := filepath.Join(vendor, "src", target)
+		if boolString[strings.ToLower(private)] {
+			srcdir := filepath.Join(vendor, "src", name)
 			if _, err := os.Stat(srcdir); err != nil {
 				if os.IsExist(err) {
+					fmt.Printf("pulling private %s\n", name)
 					if err := gom.pullPrivate(srcdir); err != nil {
 						return err
 					}
 				} else {
-					if err := gom.clonePrivate(srcdir); err != nil {
+					useHttps := false
+					if possible, ok := gom.options["https"].(string); ok {
+						useHttps = boolString[strings.ToLower(possible)]
+					}
+					fmt.Printf("cloning private %s\n", name)
+					if err := gom.clonePrivate(srcdir, useHttps); err != nil {
 						return err
 					}
 				}
@@ -141,10 +156,30 @@ func (gom *Gom) Clone(args []string) error {
 
 	cmdArgs := []string{"go", "get", "-d"}
 	cmdArgs = append(cmdArgs, args...)
-	cmdArgs = append(cmdArgs, gom.name)
+	cmdArgs = append(cmdArgs, name)
 
-	fmt.Printf("downloading %s\n", gom.name)
-	return run(cmdArgs, Blue)
+	fmt.Printf("downloading %s\n", name)
+	result := run(cmdArgs, Blue)
+
+	// We're going to use a fork
+	if has(gom.options, "fork") {
+		// we now need to move from fork to target
+		var (
+			tag = getTarget(gom)
+			src = filepath.Join(vendor, "src", getFork(gom))
+			dst = filepath.Join(vendor, "src", tag)
+		)
+		fmt.Printf("forking (%s, %s)\n", name, tag)
+
+		if err := mustCopyDir(dst, src); err != nil {
+			return err
+		}
+		if err := os.RemoveAll(src); err != nil {
+			return err
+		}
+	}
+
+	return result
 }
 
 func (gom *Gom) pullPrivate(srcdir string) (err error) {
@@ -160,9 +195,14 @@ func (gom *Gom) pullPrivate(srcdir string) (err error) {
 	return
 }
 
-func (gom *Gom) clonePrivate(srcdir string) (err error) {
-	name := strings.Split(gom.name, "/")
-	privateUrl := fmt.Sprintf("git@%s:%s/%s", name[0], name[1], name[2])
+func (gom *Gom) clonePrivate(srcdir string, useHttps bool) (err error) {
+	var privateUrl string
+	if useHttps {
+		privateUrl = fmt.Sprintf("https://%s.git", gom.name)
+	} else {
+		name := strings.Split(gom.name, "/")
+		privateUrl = fmt.Sprintf("git@%s:%s/%s", name[0], name[1], name[2])
+	}
 
 	fmt.Printf("fetching private repo %s\n", gom.name)
 	cloneCmd := []string{"git", "clone", privateUrl, srcdir}
@@ -302,4 +342,19 @@ func install(args []string) error {
 	}
 
 	return nil
+}
+
+func getTarget(gom *Gom) string {
+	target, ok := gom.options["target"].(string)
+	if !ok {
+		target = gom.name
+	}
+	return target
+}
+
+func getFork(gom *Gom) string {
+	if has(gom.options, "fork") {
+		return gom.options["fork"].(string)
+	}
+	return getTarget(gom)
 }

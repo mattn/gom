@@ -115,7 +115,6 @@ func TestGomfile5(t *testing.T) {
 group :custom_one do
 	gom 'github.com/mattn/go-sqlite3', :tag => '3.14', :commit => 'asdfasdf'
 end
-
 group :custom_two do
 	gom 'github.com/mattn/go-gtk', :foobar => 'barbaz'
 end
@@ -146,6 +145,25 @@ end
 	}
 	expected = []Gom{
 		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf"}},
+	}
+	if !reflect.DeepEqual(goms, expected) {
+		t.Fatalf("Expected %v, but %v:", expected, goms)
+	}
+}
+
+func TestGomfile99(t *testing.T) {
+	filename, err := tempGomfile(`
+gom 'github.com/mattn/gom', :fork => 'github.com/dicefm/gom'
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	goms, err := parseGomfile(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := []Gom{
+		{name: "github.com/mattn/gom", options: map[string]interface{}{"fork": "github.com/dicefm/gom"}},
 	}
 	if !reflect.DeepEqual(goms, expected) {
 		t.Fatalf("Expected %v, but %v:", expected, goms)
