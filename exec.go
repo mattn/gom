@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/daviddengcn/go-colortext"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -13,9 +12,9 @@ import (
 type Color int
 
 const (
-	None Color = Color(ct.None)
-	Red  Color = Color(ct.Red)
-	Blue Color = Color(ct.Blue)
+	None = Color(iota)
+	Red
+	Blue
 )
 
 func handleSignal() {
@@ -23,7 +22,6 @@ func handleSignal() {
 	signal.Notify(sc, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 	go func() {
 		<-sc
-		ct.ResetColor()
 		os.Exit(0)
 	}()
 }
@@ -74,7 +72,7 @@ func ready() error {
 
 var stdout = os.Stdout
 var stderr = os.Stderr
-var stdin  = os.Stdin
+var stdin = os.Stdin
 
 func run(args []string, c Color) error {
 	if err := ready(); err != nil {
@@ -86,9 +84,7 @@ func run(args []string, c Color) error {
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
-	cmd.Stdin  = stdin
-	ct.ChangeColor(ct.Color(c), true, ct.None, false)
+	cmd.Stdin = stdin
 	err := cmd.Run()
-	ct.ResetColor()
 	return err
 }
