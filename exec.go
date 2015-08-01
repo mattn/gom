@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -75,6 +76,9 @@ var stderr = os.Stderr
 var stdin = os.Stdin
 
 func run(args []string, c Color) error {
+	if *verbose {
+		fmt.Printf("%q\n", args)
+	}
 	if err := ready(); err != nil {
 		return err
 	}
