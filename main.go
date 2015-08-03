@@ -23,7 +23,7 @@ func usage() {
    gom gen gomfile         : Scan packages from current directory as root
                               recursively, and generate Gomfile
    gom lock                : Generate Gomfile.lock
-   gom vendor              : Populate _vendor package source
+   gom populate            : Populate _vendor package source
 `, os.Args[0])
 	os.Exit(1)
 }
@@ -86,8 +86,8 @@ func main() {
 		}
 	case "lock", "l":
 		err = genGomfileLock()
-	case "vendor":
-		_, err = vendor(subArgs)
+	case "populate":
+		_, err = populate(subArgs)
 	default:
 		usage()
 	}

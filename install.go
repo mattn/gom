@@ -242,7 +242,7 @@ func isDir(p string) bool {
 	return false
 }
 
-func vendor(args []string) ([]Gom, error) {
+func populate(args []string) ([]Gom, error) {
 	allGoms, err := parseGomfile("Gomfile")
 	if err != nil {
 		return nil, err
@@ -310,7 +310,7 @@ func vendor(args []string) ([]Gom, error) {
 }
 
 func install(args []string) error {
-	goms, err := vendor(args)
+	goms, err := populate(args)
 	if err != nil {
 		return err
 	}
