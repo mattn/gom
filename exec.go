@@ -60,7 +60,7 @@ func ready() error {
 	}
 
 	vendor = strings.Join(
-		[]string{vendor, dir, os.Getenv("GOPATH")},
+		[]string{os.Getenv("GOPATH", dir, vendor},
 		string(filepath.ListSeparator),
 	)
 	err = os.Setenv("GOPATH", vendor)
