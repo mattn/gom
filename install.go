@@ -49,6 +49,9 @@ func (vcs *vcsCmd) Update(p string) error {
 
 func (vcs *vcsCmd) Revision(dir string) (string, error) {
 	args := append(vcs.revision)
+	if *verbose {
+		fmt.Printf("cd %q && %q\n", dir, args)
+	}
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Dir = dir
 	cmd.Stderr = os.Stderr
@@ -77,6 +80,9 @@ func (vcs *vcsCmd) Sync(p, destination string) error {
 }
 
 func vcsExec(dir string, args ...string) error {
+	if *verbose {
+		fmt.Printf("cd %q && %q\n", dir, args)
+	}
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Dir = dir
 	cmd.Stdout = os.Stdout
@@ -236,29 +242,36 @@ func isDir(p string) bool {
 	return false
 }
 
-func install(args []string) error {
+func populate(args []string) ([]Gom, error) {
 	allGoms, err := parseGomfile("Gomfile")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	vendor, err := filepath.Abs(vendorFolder)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	_, err = os.Stat(vendor)
 	if err != nil {
 		err = os.MkdirAll(vendor, 0755)
 		if err != nil {
-			return err
+			return nil, err
 		}
+	}
+	if *verbose {
+		fmt.Printf("export GOPATH=%q\n", vendor)
 	}
 	err = os.Setenv("GOPATH", vendor)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = os.Setenv("GOBIN", filepath.Join(vendor, "bin"))
+	gobin := filepath.Join(vendor, "bin")
+	if *verbose {
+		fmt.Printf("export GOBIN=%q\n", gobin)
+	}
+	err = os.Setenv("GOBIN", gobin)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// 1. Filter goms to install
@@ -281,7 +294,7 @@ func install(args []string) error {
 	for _, gom := range goms {
 		err = gom.Clone(args)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -289,8 +302,17 @@ func install(args []string) error {
 	for _, gom := range goms {
 		err = gom.Checkout()
 		if err != nil {
-			return err
+			return nil, err
 		}
+	}
+
+	return goms, nil
+}
+
+func install(args []string) error {
+	goms, err := populate(args)
+	if err != nil {
+		return err
 	}
 
 	// 4. Build and install

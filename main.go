@@ -23,6 +23,7 @@ func usage() {
    gom gen gomfile         : Scan packages from current directory as root
                               recursively, and generate Gomfile
    gom lock                : Generate Gomfile.lock
+   gom populate            : Populate _vendor package source
 `, os.Args[0])
 	os.Exit(1)
 }
@@ -30,6 +31,7 @@ func usage() {
 var productionEnv = flag.Bool("production", false, "production environment")
 var developmentEnv = flag.Bool("development", false, "development environment")
 var testEnv = flag.Bool("test", false, "test environment")
+var verbose = flag.Bool("v", false, "enable verbosity")
 var customGroups = flag.String("groups", "", "comma-separated list of Gomfile groups")
 var customGroupList []string
 var vendorFolder string
@@ -84,6 +86,8 @@ func main() {
 		}
 	case "lock", "l":
 		err = genGomfileLock()
+	case "populate":
+		_, err = populate(subArgs)
 	default:
 		usage()
 	}
