@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -36,6 +37,28 @@ var testEnv = flag.Bool("test", false, "test environment")
 var customGroups = flag.String("groups", "", "comma-separated list of Gomfile groups")
 var customGroupList []string
 var vendorFolder string
+var go15VendorExperimentEnv bool
+
+func init() {
+	go15VendorExperimentEnv = len(os.Getenv("GO15VENDOREXPERIMENT")) > 0
+	if go15VendorExperimentEnv {
+		vendorFolder = "vendor"
+	} else {
+		if len(os.Getenv("GOM_VENDOR_NAME")) > 0 {
+			vendorFolder = os.Getenv("GOM_VENDOR_NAME")
+		} else {
+			vendorFolder = "_vendor"
+		}
+	}
+}
+
+func vendorSrc(vendor string) string {
+	if go15VendorExperimentEnv {
+		return vendor
+	} else {
+		return filepath.Join(vendor, "src")
+	}
+}
 
 func main() {
 	flag.Usage = usage
@@ -50,12 +73,6 @@ func main() {
 	}
 
 	customGroupList = strings.Split(*customGroups, ",")
-
-	if len(os.Getenv("GOM_VENDOR_NAME")) > 0 {
-		vendorFolder = os.Getenv("GOM_VENDOR_NAME")
-	} else {
-		vendorFolder = "_vendor"
-	}
 
 	var err error
 	subArgs := flag.Args()[1:]
