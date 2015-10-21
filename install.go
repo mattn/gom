@@ -109,15 +109,25 @@ func (gom *Gom) Clone(args []string) error {
 			target = gom.name
 		}
 
+		var customCmd []string
 		srcdir := filepath.Join(vendor, "src", target)
-		customCmd := strings.Split(command, " ")
-		customCmd = append(customCmd, srcdir)
-
-		fmt.Printf("fetching %s (%v)\n", gom.name, customCmd)
-		err = run(customCmd, Blue)
-		if err != nil {
-			return err
+		if _, err := os.Stat(srcdir); err == nil || os.IsExist(err) {
+			if update, ok := gom.options["update"].(string); ok {
+				customCmd = strings.Split(update, " ")
+				customCmd = append(customCmd)
+				fmt.Printf("updating %s (%v)\n", gom.name, customCmd)
+				vcsExec(srcdir, customCmd...)
+			}
+		} else {
+			customCmd := strings.Split(command, " ")
+			customCmd = append(customCmd, srcdir)
+			fmt.Printf("fetching %s (%v)\n", gom.name, customCmd)
+			err = run(customCmd, Blue)
+			if err != nil {
+				return err
+			}
 		}
+
 	} else if private, ok := gom.options["private"].(string); ok {
 		if private == "true" {
 			target, ok := gom.options["target"].(string)
