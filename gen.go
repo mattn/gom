@@ -134,7 +134,7 @@ func genGomfileLock() error {
 
 	for _, gom := range goms {
 		var vcs *vcsCmd
-		p := filepath.Join(vendor, "src", gom.name)
+		p := filepath.Join(vendorSrc(vendor), gom.name)
 		if isDir(filepath.Join(p, ".git")) {
 			vcs = git
 		} else if isDir(filepath.Join(p, ".hg")) {

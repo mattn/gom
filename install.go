@@ -109,7 +109,7 @@ func (gom *Gom) Clone(args []string) error {
 			target = gom.name
 		}
 
-		srcdir := filepath.Join(vendor, "src", target)
+		srcdir := filepath.Join(vendorSrc(vendor), target)
 		customCmd := strings.Split(command, " ")
 		customCmd = append(customCmd, srcdir)
 
@@ -124,7 +124,7 @@ func (gom *Gom) Clone(args []string) error {
 			if !ok {
 				target = gom.name
 			}
-			srcdir := filepath.Join(vendor, "src", target)
+			srcdir := filepath.Join(vendorSrc(vendor), target)
 			if _, err := os.Stat(srcdir); err != nil {
 				if os.IsExist(err) {
 					if err := gom.pullPrivate(srcdir); err != nil {
@@ -192,7 +192,7 @@ func (gom *Gom) Checkout() error {
 	if err != nil {
 		return err
 	}
-	p := filepath.Join(vendor, "src")
+	p := vendorSrc(vendor)
 	for _, elem := range strings.Split(gom.name, "/") {
 		var vcs *vcsCmd
 		p = filepath.Join(p, elem)
@@ -204,7 +204,7 @@ func (gom *Gom) Checkout() error {
 			vcs = bzr
 		}
 		if vcs != nil {
-			p = filepath.Join(vendor, "src", gom.name)
+			p = filepath.Join(vendorSrc(vendor), gom.name)
 			return vcs.Sync(p, commit_or_branch_or_tag)
 		}
 	}
@@ -218,7 +218,7 @@ func (gom *Gom) Build(args []string) error {
 	if err != nil {
 		return err
 	}
-	p := filepath.Join(vendor, "src", gom.name)
+	p := filepath.Join(vendorSrc(vendor), gom.name)
 	return vcsExec(p, installCmd...)
 }
 
