@@ -109,7 +109,7 @@ func (gom *Gom) Clone(args []string) error {
 			target = gom.name
 		}
 
-		srcdir := filepath.Join(vendorSrc(vendor), target)
+		srcdir := filepath.Join(vendor, "src", target)
 		customCmd := strings.Split(command, " ")
 		customCmd = append(customCmd, srcdir)
 
@@ -124,7 +124,7 @@ func (gom *Gom) Clone(args []string) error {
 			if !ok {
 				target = gom.name
 			}
-			srcdir := filepath.Join(vendorSrc(vendor), target)
+			srcdir := filepath.Join(vendor, "src", target)
 			if _, err := os.Stat(srcdir); err != nil {
 				if os.IsExist(err) {
 					if err := gom.pullPrivate(srcdir); err != nil {
@@ -192,7 +192,7 @@ func (gom *Gom) Checkout() error {
 	if err != nil {
 		return err
 	}
-	p := vendorSrc(vendor)
+	p := filepath.Join(vendor, "src")
 	for _, elem := range strings.Split(gom.name, "/") {
 		var vcs *vcsCmd
 		p = filepath.Join(p, elem)
@@ -204,7 +204,7 @@ func (gom *Gom) Checkout() error {
 			vcs = bzr
 		}
 		if vcs != nil {
-			p = filepath.Join(vendorSrc(vendor), gom.name)
+			p = filepath.Join(vendor, "src", gom.name)
 			return vcs.Sync(p, commit_or_branch_or_tag)
 		}
 	}
@@ -218,7 +218,7 @@ func (gom *Gom) Build(args []string) error {
 	if err != nil {
 		return err
 	}
-	p := filepath.Join(vendorSrc(vendor), gom.name)
+	p := filepath.Join(vendor, "src", gom.name)
 	return vcsExec(p, installCmd...)
 }
 
@@ -234,6 +234,64 @@ func isDir(p string) bool {
 		return true
 	}
 	return false
+}
+
+func moveSrcToVendorSrc(vendor string) error {
+	fmt.Printf("moveSrcToVendorSrc. vendor=%s\n", vendor)
+	vendorSrc := filepath.Join(vendor, "src")
+	dirs, err := readdirnames(vendor)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(vendorSrc, 0755)
+	if err != nil {
+		return err
+	}
+	for _, dir := range dirs {
+		if dir == "bin" || dir == "pkg" || dir == "src" {
+			continue
+		}
+		fmt.Printf("moveSrcToVendorSrc. rename %s to %s\n", filepath.Join(vendor, dir), filepath.Join(vendorSrc, dir))
+		err = os.Rename(filepath.Join(vendor, dir), filepath.Join(vendorSrc, dir))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func moveSrcToVendor(vendor string) error {
+	fmt.Printf("moveSrcToVendor. vendor=%s\n", vendor)
+	vendorSrc := filepath.Join(vendor, "src")
+	dirs, err := readdirnames(vendorSrc)
+	if err != nil {
+		return err
+	}
+	for _, dir := range dirs {
+		fmt.Printf("moveSrcToVendor. rename %s to %s\n", filepath.Join(vendorSrc, dir), filepath.Join(vendor, dir))
+		err = os.Rename(filepath.Join(vendorSrc, dir), filepath.Join(vendor, dir))
+		if err != nil {
+			return err
+		}
+	}
+	err = os.Remove(vendorSrc)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func readdirnames(dirname string) ([]string, error) {
+	f, err := os.Open(dirname)
+	if err != nil {
+		return nil, err
+	}
+	list, err := f.Readdirnames(-1)
+	f.Close()
+	if err != nil {
+		return nil, err
+	}
+	return list, nil
 }
 
 func install(args []string) error {
@@ -277,6 +335,13 @@ func install(args []string) error {
 		goms = append(goms, gom)
 	}
 
+	if go15VendorExperimentEnv {
+		err = moveSrcToVendorSrc(vendor)
+		if err != nil {
+			return err
+		}
+	}
+
 	// 2. Clone the repositories
 	for _, gom := range goms {
 		err = gom.Clone(args)
@@ -296,6 +361,13 @@ func install(args []string) error {
 	// 4. Build and install
 	for _, gom := range goms {
 		err = gom.Build(args)
+		if err != nil {
+			return err
+		}
+	}
+
+	if go15VendorExperimentEnv {
+		err = moveSrcToVendor(vendor)
 		if err != nil {
 			return err
 		}
