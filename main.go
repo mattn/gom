@@ -39,6 +39,19 @@ var customGroupList []string
 var vendorFolder string
 var go15VendorExperimentEnv bool
 
+func init() {
+	go15VendorExperimentEnv = len(os.Getenv("GO15VENDOREXPERIMENT")) > 0
+	if go15VendorExperimentEnv {
+		vendorFolder = "vendor"
+	} else {
+		if len(os.Getenv("GOM_VENDOR_NAME")) > 0 {
+			vendorFolder = os.Getenv("GOM_VENDOR_NAME")
+		} else {
+			vendorFolder = "_vendor"
+		}
+	}
+}
+
 func vendorSrc(vendor string) string {
 	if go15VendorExperimentEnv {
 		return vendor
@@ -60,17 +73,6 @@ func main() {
 	}
 
 	customGroupList = strings.Split(*customGroups, ",")
-
-	go15VendorExperimentEnv = len(os.Getenv("GO15VENDOREXPERIMENT")) > 0
-	if go15VendorExperimentEnv {
-		vendorFolder = "vendor"
-	} else {
-		if len(os.Getenv("GOM_VENDOR_NAME")) > 0 {
-			vendorFolder = os.Getenv("GOM_VENDOR_NAME")
-		} else {
-			vendorFolder = "_vendor"
-		}
-	}
 
 	var err error
 	subArgs := flag.Args()[1:]
