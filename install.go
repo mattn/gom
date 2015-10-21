@@ -110,6 +110,10 @@ func (gom *Gom) Clone(args []string) error {
 		}
 
 		srcdir := filepath.Join(vendor, "src", target)
+		if err := os.MkdirAll(srcdir, 0755); err != nil {
+			return err
+		}
+
 		customCmd := strings.Split(command, " ")
 		customCmd = append(customCmd, srcdir)
 
@@ -126,14 +130,15 @@ func (gom *Gom) Clone(args []string) error {
 			}
 			srcdir := filepath.Join(vendor, "src", target)
 			if _, err := os.Stat(srcdir); err != nil {
-				if os.IsExist(err) {
-					if err := gom.pullPrivate(srcdir); err != nil {
-						return err
-					}
-				} else {
-					if err := gom.clonePrivate(srcdir); err != nil {
-						return err
-					}
+				if err := os.MkdirAll(srcdir, 0755); err != nil {
+					return err
+				}
+				if err := gom.clonePrivate(srcdir); err != nil {
+					return err
+				}
+			} else {
+				if err := gom.pullPrivate(srcdir); err != nil {
+					return err
 				}
 			}
 		}
@@ -148,9 +153,17 @@ func (gom *Gom) Clone(args []string) error {
 }
 
 func (gom *Gom) pullPrivate(srcdir string) (err error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	if err := os.Chdir(srcdir); err != nil {
+		return err
+	}
+	defer os.Chdir(cwd)
+
 	fmt.Printf("fetching private repo %s\n", gom.name)
-	pullCmd := fmt.Sprintf("git --work-tree=%s, --git-dir=%s/.git pull origin",
-		srcdir, srcdir)
+	pullCmd := "git pull origin"
 	pullArgs := strings.Split(pullCmd, " ")
 	err = run(pullArgs, Blue)
 	if err != nil {
