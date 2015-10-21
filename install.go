@@ -237,7 +237,6 @@ func isDir(p string) bool {
 }
 
 func moveSrcToVendorSrc(vendor string) error {
-	fmt.Printf("moveSrcToVendorSrc. vendor=%s\n", vendor)
 	vendorSrc := filepath.Join(vendor, "src")
 	dirs, err := readdirnames(vendor)
 	if err != nil {
@@ -251,7 +250,6 @@ func moveSrcToVendorSrc(vendor string) error {
 		if dir == "bin" || dir == "pkg" || dir == "src" {
 			continue
 		}
-		fmt.Printf("moveSrcToVendorSrc. rename %s to %s\n", filepath.Join(vendor, dir), filepath.Join(vendorSrc, dir))
 		err = os.Rename(filepath.Join(vendor, dir), filepath.Join(vendorSrc, dir))
 		if err != nil {
 			return err
@@ -261,14 +259,12 @@ func moveSrcToVendorSrc(vendor string) error {
 }
 
 func moveSrcToVendor(vendor string) error {
-	fmt.Printf("moveSrcToVendor. vendor=%s\n", vendor)
 	vendorSrc := filepath.Join(vendor, "src")
 	dirs, err := readdirnames(vendorSrc)
 	if err != nil {
 		return err
 	}
 	for _, dir := range dirs {
-		fmt.Printf("moveSrcToVendor. rename %s to %s\n", filepath.Join(vendorSrc, dir), filepath.Join(vendor, dir))
 		err = os.Rename(filepath.Join(vendorSrc, dir), filepath.Join(vendor, dir))
 		if err != nil {
 			return err
