@@ -144,7 +144,17 @@ func (gom *Gom) Clone(args []string) error {
 		}
 	}
 
+	if skipdep, ok := gom.options["skipdep"].(string); ok {
+		if skipdep == "true" {
+			return nil
+		}
+	}
 	cmdArgs := []string{"go", "get", "-d"}
+	if insecure, ok := gom.options["insecure"].(string); ok {
+		if insecure == "true" {
+			cmdArgs = append(cmdArgs, "-insecure")
+		}
+	}
 	cmdArgs = append(cmdArgs, args...)
 	cmdArgs = append(cmdArgs, gom.name)
 
@@ -163,7 +173,7 @@ func (gom *Gom) pullPrivate(srcdir string) (err error) {
 	defer os.Chdir(cwd)
 
 	fmt.Printf("fetching private repo %s\n", gom.name)
-	pullCmd := "git pull origin"
+	pullCmd := "git pull origin master"
 	pullArgs := strings.Split(pullCmd, " ")
 	err = run(pullArgs, Blue)
 	if err != nil {
@@ -206,7 +216,11 @@ func (gom *Gom) Checkout() error {
 		return err
 	}
 	p := filepath.Join(vendor, "src")
-	for _, elem := range strings.Split(gom.name, "/") {
+	target, ok := gom.options["target"].(string)
+	if !ok {
+		target = gom.name
+	}
+	for _, elem := range strings.Split(target, "/") {
 		var vcs *vcsCmd
 		p = filepath.Join(p, elem)
 		if isDir(filepath.Join(p, ".git")) {
@@ -217,7 +231,7 @@ func (gom *Gom) Checkout() error {
 			vcs = bzr
 		}
 		if vcs != nil {
-			p = filepath.Join(vendor, "src", gom.name)
+			p = filepath.Join(vendor, "src", target)
 			return vcs.Sync(p, commit_or_branch_or_tag)
 		}
 	}
@@ -231,7 +245,11 @@ func (gom *Gom) Build(args []string) error {
 	if err != nil {
 		return err
 	}
-	p := filepath.Join(vendor, "src", gom.name)
+	target, ok := gom.options["target"].(string)
+	if !ok {
+		target = gom.name
+	}
+	p := filepath.Join(vendor, "src", target)
 	return vcsExec(p, installCmd...)
 }
 
@@ -369,6 +387,11 @@ func install(args []string) error {
 
 	// 4. Build and install
 	for _, gom := range goms {
+		if skipdep, ok := gom.options["skipdep"].(string); ok {
+			if skipdep == "true" {
+				continue
+			}
+		}
 		err = gom.Build(args)
 		if err != nil {
 			return err
