@@ -102,7 +102,7 @@ If you want to bundle a repository that `go get` can't access
 
 If you want to change local repository directory with commend 'git clone', also skipdep and insecure, which is useful in internal network environment.
 
-    gom 'github.com/username/repository', :private => 'ture', :target => 'repository', insecure=>'true', skipdep=>'true' 
+    gom 'github.com/username/repository', :private => 'true', :target => 'repository', insecure=>'true', skipdep=>'true' 
 
 Todo
 ----
