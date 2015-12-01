@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -156,7 +157,7 @@ func (gom *Gom) Clone(args []string) error {
 		}
 	}
 	cmdArgs = append(cmdArgs, args...)
-	cmdArgs = append(cmdArgs, gom.name)
+	cmdArgs = append(cmdArgs, gom.name+"/...")
 
 	fmt.Printf("downloading %s\n", gom.name)
 	return run(cmdArgs, Blue)
@@ -240,7 +241,18 @@ func (gom *Gom) Checkout() error {
 }
 
 func (gom *Gom) Build(args []string) error {
-	installCmd := append([]string{"go", "install"}, args...)
+	installCmd := []string{"go", "install"}
+	hasPkg := false
+	for _, arg := range args {
+		if !strings.HasPrefix(arg, "-") {
+			arg = path.Join(arg, "...")
+			hasPkg = true
+		}
+		installCmd = append(installCmd, arg)
+	}
+	if !hasPkg {
+		installCmd = append(installCmd, "./...")
+	}
 	vendor, err := filepath.Abs(vendorFolder)
 	if err != nil {
 		return err
