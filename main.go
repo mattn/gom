@@ -91,6 +91,12 @@ func main() {
 		err = run(subArgs, None)
 	case "env", "tool", "fmt", "list", "vet":
 		err = run(append([]string{"go", flag.Arg(0)}, subArgs...), None)
+	case "o":
+		goms, err := parseGomfile("Gomfile")
+		if err != nil {
+			println(err.Error())
+		}
+		writeGomfile("foo", goms)
 	case "gen", "g":
 		switch flag.Arg(1) {
 		case "travis-yml":

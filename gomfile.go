@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -117,6 +118,7 @@ func parseGomfile(filename string) ([]Gom, error) {
 	n := 0
 	skip := 0
 	valid := true
+	var envs []string
 	for {
 		n++
 		lb, _, err := br.ReadLine()
@@ -135,7 +137,7 @@ func parseGomfile(filename string) ([]Gom, error) {
 		options := make(map[string]interface{})
 		var items []string
 		if re_group.MatchString(line) {
-			envs := strings.Split(re_group.FindStringSubmatch(line)[1], ",")
+			envs = strings.Split(re_group.FindStringSubmatch(line)[1], ",")
 			for i := range envs {
 				envs[i] = strings.TrimSpace(envs[i])[1:]
 			}
@@ -154,6 +156,7 @@ func parseGomfile(filename string) ([]Gom, error) {
 				}
 			}
 			valid = false
+			envs = nil
 			continue
 		} else if skip > 0 {
 			continue
@@ -164,7 +167,98 @@ func parseGomfile(filename string) ([]Gom, error) {
 		} else {
 			return nil, fmt.Errorf("Syntax Error at line %d", n)
 		}
+		if envs != nil {
+			options["envs"] = envs
+		}
 		goms = append(goms, Gom{name, options})
 	}
 	return goms, nil
+}
+
+func keys(m map[string]interface{}) []string {
+	ks := []string{}
+	for k := range m {
+		ks = append(ks, k)
+	}
+	sort.Strings(ks)
+	return ks
+}
+
+func writeGomfile(filename string, goms []Gom) error {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	envn := map[string]interface{}{"": true}
+	for _, gom := range goms {
+		if e, ok := gom.options["envs"]; ok {
+			switch kv := e.(type) {
+			case string:
+				envn[kv] = true
+			case []string:
+				for _, kk := range kv {
+					envn[kk] = true
+				}
+			}
+		}
+	}
+	for _, env := range keys(envn) {
+		indent := ""
+		if env != "" {
+			fmt.Fprintf(f, "group :%s do\n", env)
+			indent = "  "
+		}
+		for _, gom := range goms {
+			if e, ok := gom.options["envs"]; ok {
+				found := false
+				switch kv := e.(type) {
+				case string:
+					if kv == env {
+						found = true
+					}
+				case []string:
+					for _, kk := range kv {
+						if kk == env {
+							found = true
+							break
+						}
+					}
+				}
+				if !found {
+					continue
+				}
+			} else if env != "" {
+				continue
+			}
+			fmt.Fprintf(f, indent+"gom '%s'", gom.name)
+			for _, key := range keys(gom.options) {
+				if key == "envs" {
+					continue
+				}
+				v := gom.options[key]
+				switch kv := v.(type) {
+				case string:
+					fmt.Fprintf(f, ", :%s => '%s'", key, kv)
+				case []string:
+					ks := ""
+					for _, vv := range kv {
+						if ks == "" {
+							ks = "["
+						} else {
+							ks += ", "
+						}
+						ks += ":" + vv
+					}
+					ks += "]"
+					fmt.Fprintf(f, ", :%s => %s", key, ks)
+				}
+			}
+			fmt.Fprintf(f, "\n")
+		}
+		if env != "" {
+			fmt.Fprintf(f, "end\n")
+		}
+	}
+	return nil
 }
