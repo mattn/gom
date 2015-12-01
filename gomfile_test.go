@@ -103,7 +103,7 @@ end
 		t.Fatal(err)
 	}
 	expected := []Gom{
-		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf"}},
+		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf", "group": []string{"development"}}},
 	}
 	if !reflect.DeepEqual(goms, expected) {
 		t.Fatalf("Expected %v, but %v:", expected, goms)
@@ -131,8 +131,8 @@ end
 		t.Fatal(err)
 	}
 	expected := []Gom{
-		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf"}},
-		{name: "github.com/mattn/go-gtk", options: map[string]interface{}{"foobar": "barbaz"}},
+		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf", "group": []string{"custom_one"}}},
+		{name: "github.com/mattn/go-gtk", options: map[string]interface{}{"foobar": "barbaz", "group": []string{"custom_two"}}},
 	}
 	if !reflect.DeepEqual(goms, expected) {
 		t.Fatalf("Expected %v, but %v:", expected, goms)
@@ -145,7 +145,7 @@ end
 		t.Fatal(err)
 	}
 	expected = []Gom{
-		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf"}},
+		{name: "github.com/mattn/go-sqlite3", options: map[string]interface{}{"tag": "3.14", "commit": "asdfasdf", "group": []string{"custom_one"}}},
 	}
 	if !reflect.DeepEqual(goms, expected) {
 		t.Fatalf("Expected %v, but %v:", expected, goms)
