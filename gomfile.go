@@ -168,7 +168,7 @@ func parseGomfile(filename string) ([]Gom, error) {
 			return nil, fmt.Errorf("Syntax Error at line %d", n)
 		}
 		if envs != nil {
-			options["envs"] = envs
+			options["group"] = envs
 		}
 		goms = append(goms, Gom{name, options})
 	}
@@ -192,7 +192,7 @@ func writeGomfile(filename string, goms []Gom) error {
 	defer f.Close()
 	envn := map[string]interface{}{"": true}
 	for _, gom := range goms {
-		if e, ok := gom.options["envs"]; ok {
+		if e, ok := gom.options["group"]; ok {
 			switch kv := e.(type) {
 			case string:
 				envn[kv] = true
@@ -210,7 +210,7 @@ func writeGomfile(filename string, goms []Gom) error {
 			indent = "  "
 		}
 		for _, gom := range goms {
-			if e, ok := gom.options["envs"]; ok {
+			if e, ok := gom.options["group"]; ok {
 				found := false
 				switch kv := e.(type) {
 				case string:
@@ -233,7 +233,7 @@ func writeGomfile(filename string, goms []Gom) error {
 			}
 			fmt.Fprintf(f, indent+"gom '%s'", gom.name)
 			for _, key := range keys(gom.options) {
-				if key == "envs" {
+				if key == "group" {
 					continue
 				}
 				v := gom.options[key]

@@ -23,6 +23,7 @@ func usage() {
    gom fmt     [arguments] : Run go fmt
    gom list    [arguments] : Run go list
    gom vet     [arguments] : Run go vet
+   gom update              : Update all dependencies (Experiment)
    gom gen travis-yml      : Generate .travis.yml which uses "gom test"
    gom gen gomfile         : Scan packages from current directory as root
                               recursively, and generate Gomfile
@@ -91,12 +92,8 @@ func main() {
 		err = run(subArgs, None)
 	case "env", "tool", "fmt", "list", "vet":
 		err = run(append([]string{"go", flag.Arg(0)}, subArgs...), None)
-	case "o":
-		goms, err := parseGomfile("Gomfile")
-		if err != nil {
-			println(err.Error())
-		}
-		writeGomfile("foo", goms)
+	case "update", "u":
+		err = update()
 	case "gen", "g":
 		switch flag.Arg(1) {
 		case "travis-yml":

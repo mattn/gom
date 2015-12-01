@@ -13,9 +13,10 @@ import (
 type Color int
 
 const (
-	None Color = Color(ct.None)
-	Red  Color = Color(ct.Red)
-	Blue Color = Color(ct.Blue)
+	None  Color = Color(ct.None)
+	Red   Color = Color(ct.Red)
+	Blue  Color = Color(ct.Blue)
+	Green Color = Color(ct.Green)
 )
 
 func handleSignal() {

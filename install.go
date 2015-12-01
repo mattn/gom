@@ -99,6 +99,19 @@ func has(c interface{}, key string) bool {
 	return false
 }
 
+func (gom *Gom) Update() error {
+	cmdArgs := []string{"go", "get", "-u"}
+	if insecure, ok := gom.options["insecure"].(string); ok {
+		if insecure == "true" {
+			cmdArgs = append(cmdArgs, "-insecure")
+		}
+	}
+	cmdArgs = append(cmdArgs, gom.name+"/...")
+
+	fmt.Printf("updating %s\n", gom.name)
+	return run(cmdArgs, Green)
+}
+
 func (gom *Gom) Clone(args []string) error {
 	vendor, err := filepath.Abs(vendorFolder)
 	if err != nil {
@@ -347,37 +360,45 @@ func parseInstallFlags(args []string) (opts map[string]string, retargs []string)
 	return
 }
 
+func hasSaveOpts(opts map[string]string) bool {
+	if _, ok := opts["save"]; ok {
+		return true
+	}
+	if _, ok := opts["save-dev"]; ok {
+		return true
+	}
+	return false
+}
+
 func install(args []string) error {
-	_, args = parseInstallFlags(args)
+	var opts map[string]string
+	opts, args = parseInstallFlags(args)
 	allGoms, err := parseGomfile("Gomfile")
 	if err != nil {
 		return err
 	}
-	/*
-		  TODO: install --save
-				if _, ok := opts["save"]; ok {
-					found := false
-					for _, arg := range args {
-						for _, gom := range allGoms {
-							if gom.name == arg {
-								found = true
-								break
-							}
-						}
-						if !found {
-							allGoms = append(allGoms, Gom{name: arg})
-						}
-					}
-					err = writeGomfile("Gomfile", allGoms)
-					if err != nil {
-						return err
-					}
-					allGoms, err = parseGomfile("Gomfile")
-					if err != nil {
-						return err
-					}
+	if hasSaveOpts(opts) {
+		found := false
+		for _, arg := range args {
+			for _, gom := range allGoms {
+				if gom.name == arg {
+					found = true
+					break
 				}
-	*/
+			}
+			if !found {
+				options := map[string]interface{}{}
+				if _, ok := opts["save-dev"]; ok {
+					options["envs"] = []string{"development"}
+				}
+				allGoms = append(allGoms, Gom{name: arg, options: options})
+			}
+		}
+		err = writeGomfile("Gomfile", allGoms)
+		if err != nil {
+			return err
+		}
+	}
 	vendor, err := filepath.Abs(vendorFolder)
 	if err != nil {
 		return err
@@ -458,4 +479,53 @@ func install(args []string) error {
 	}
 
 	return nil
+}
+
+func update() error {
+	goms, err := parseGomfile("Gomfile")
+	if err != nil {
+		return err
+	}
+	vendor, err := filepath.Abs(vendorFolder)
+	if err != nil {
+		return err
+	}
+	err = os.Setenv("GOPATH", vendor)
+	if err != nil {
+		return err
+	}
+	err = os.Setenv("GOBIN", filepath.Join(vendor, "bin"))
+	if err != nil {
+		return err
+	}
+
+	if go15VendorExperimentEnv {
+		err = moveSrcToVendorSrc(vendor)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, gom := range goms {
+		err = gom.Update()
+		if err != nil {
+			return err
+		}
+		vcs, _, p := vcsScan(vendorSrc(vendor), gom.name)
+		if vcs != nil {
+			rev, err := vcs.Revision(p)
+			if err == nil && rev != "" {
+				gom.options["commit"] = rev
+			}
+		}
+	}
+
+	if go15VendorExperimentEnv {
+		err = moveSrcToVendor(vendor)
+		if err != nil {
+			return err
+		}
+	}
+
+	return writeGomfile("Gomfile", goms)
 }
