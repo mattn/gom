@@ -61,14 +61,13 @@ func ready() error {
 		return err
 	}
 
+	var paths []string
 	if dir == "" {
-		return nil
+		paths = []string{vendor, os.Getenv("GOPATH")}
+	} else {
+		paths = []string{vendor, dir, os.Getenv("GOPATH")}
 	}
-
-	vendor = strings.Join(
-		[]string{vendor, dir, os.Getenv("GOPATH")},
-		string(filepath.ListSeparator),
-	)
+	vendor = strings.Join(paths, string(filepath.ListSeparator))
 	err = os.Setenv("GOPATH", vendor)
 	if err != nil {
 		return err

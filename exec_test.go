@@ -30,7 +30,7 @@ func TestExec(t *testing.T) {
 		t.Fatal(err)
 	}
 	vendor := filepath.Join(dir, vendorFolder)
-	err = os.MkdirAll(filepath.Join(vendor, "src"), 0755)
+	err = os.MkdirAll(vendorSrc(vendor), 0755)
 	if err != nil {
 		t.Fatal(err)
 	}
