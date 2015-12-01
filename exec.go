@@ -47,6 +47,7 @@ func ready() error {
 		}
 		next := filepath.Clean(filepath.Join(dir, ".."))
 		if next == dir {
+			dir = ""
 			break
 		}
 		dir = next
@@ -58,6 +59,10 @@ func ready() error {
 	err = os.Setenv("PATH", binPath)
 	if err != nil {
 		return err
+	}
+
+	if dir == "" {
+		return nil
 	}
 
 	vendor = strings.Join(

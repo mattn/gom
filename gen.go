@@ -82,17 +82,35 @@ func scanDirectory(path, srcDir string) (ret []string, err error) {
 	return ret, err
 }
 
+func vcsScan(p, target string) (*vcsCmd, string, string) {
+	name := ""
+	for _, elem := range strings.Split(target, "/") {
+		var vcs *vcsCmd
+		p = filepath.Join(p, elem)
+		if name == "" {
+			name = elem
+		} else {
+			name += `/` + elem
+		}
+		if isDir(filepath.Join(p, ".git")) {
+			vcs = git
+		} else if isDir(filepath.Join(p, ".hg")) {
+			vcs = hg
+		} else if isDir(filepath.Join(p, ".bzr")) {
+			vcs = bzr
+		}
+		if vcs != nil {
+			return vcs, name, p
+		}
+	}
+	return nil, "", ""
+}
+
 func genGomfile() error {
 	_, err := os.Stat("Gomfile")
 	if err == nil {
 		return errors.New("Gomfile already exists")
 	}
-	f, err := os.Create("Gomfile")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -102,8 +120,44 @@ func genGomfile() error {
 		return err
 	}
 	sort.Strings(all)
+	goms := make([]Gom, 0)
 	for _, pkg := range all {
-		fmt.Fprintf(f, "gom '%s'\n", pkg)
+		for _, p := range filepath.SplitList(os.Getenv("GOPATH")) {
+			var vcs *vcsCmd
+			var n string
+			vcs, n, p = vcsScan(filepath.Join(p, "src"), pkg)
+			if vcs != nil {
+				found := false
+				for _, gom := range goms {
+					if gom.name == n {
+						found = true
+						break
+					}
+				}
+				if !found {
+					gom := Gom{name: n, options: make(map[string]interface{})}
+					rev, err := vcs.Revision(p)
+					if err == nil && rev != "" {
+						gom.options["commit"] = rev
+					}
+					goms = append(goms, gom)
+				}
+			}
+		}
+	}
+
+	f, err := os.Create("Gomfile")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	for _, gom := range goms {
+		if rev, ok := gom.options["commit"]; ok {
+			fmt.Fprintf(f, "gom '%s', :commit => '%s'\n", gom.name, rev.(string))
+		} else {
+			fmt.Fprintf(f, "gom '%s'\n", gom.name)
+		}
 	}
 	return nil
 }
@@ -134,20 +188,13 @@ func genGomfileLock() error {
 
 	for _, gom := range goms {
 		var vcs *vcsCmd
-		p := filepath.Join(vendorSrc(vendor), gom.name)
-		if isDir(filepath.Join(p, ".git")) {
-			vcs = git
-		} else if isDir(filepath.Join(p, ".hg")) {
-			vcs = hg
-		} else if isDir(filepath.Join(p, ".bzr")) {
-			vcs = bzr
-		}
+		var p string
+		vcs, _, p = vcsScan(vendorSrc(vendor), gom.name)
 		if vcs != nil {
 			rev, err := vcs.Revision(p)
 			if err == nil && rev != "" {
 				gom.options["commit"] = rev
 			}
-
 		}
 	}
 	f, err := os.Create("Gomfile.lock")
