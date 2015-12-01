@@ -146,20 +146,7 @@ func genGomfile() error {
 		}
 	}
 
-	f, err := os.Create("Gomfile")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	for _, gom := range goms {
-		if rev, ok := gom.options["commit"]; ok {
-			fmt.Fprintf(f, "gom '%s', :commit => '%s'\n", gom.name, rev.(string))
-		} else {
-			fmt.Fprintf(f, "gom '%s'\n", gom.name)
-		}
-	}
-	return nil
+	return writeGomfile("Gomfile", goms)
 }
 
 func genGomfileLock() error {
@@ -197,7 +184,15 @@ func genGomfileLock() error {
 			}
 		}
 	}
-	f, err := os.Create("Gomfile.lock")
+	err = writeGomfile("Gomfile.lock", goms)
+	if err == nil {
+		fmt.Println("Gomfile.lock is generated")
+	}
+	return err
+}
+
+func writeGomfile(filename string, goms []Gom) error {
+	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
@@ -209,6 +204,5 @@ func genGomfileLock() error {
 			fmt.Fprintf(f, "gom '%s'\n", gom.name)
 		}
 	}
-	fmt.Println("Gomfile.lock is generated")
 	return nil
 }

@@ -333,11 +333,51 @@ func readdirnames(dirname string) ([]string, error) {
 	return list, nil
 }
 
+func parseInstallFlags(args []string) (opts map[string]string, retargs []string) {
+	opts = make(map[string]string)
+	re := regexp.MustCompile(`^--([a-z][a-z_]*)(=\S*)?`)
+	for _, arg := range args {
+		ss := re.FindAllStringSubmatch(arg, -1)
+		if len(ss) > 0 {
+			opts[ss[0][1]] = opts[ss[0][2]]
+		} else {
+			retargs = append(retargs, arg)
+		}
+	}
+	return
+}
+
 func install(args []string) error {
+	_, args = parseInstallFlags(args)
 	allGoms, err := parseGomfile("Gomfile")
 	if err != nil {
 		return err
 	}
+	/*
+		  TODO: install --save
+				if _, ok := opts["save"]; ok {
+					found := false
+					for _, arg := range args {
+						for _, gom := range allGoms {
+							if gom.name == arg {
+								found = true
+								break
+							}
+						}
+						if !found {
+							allGoms = append(allGoms, Gom{name: arg})
+						}
+					}
+					err = writeGomfile("Gomfile", allGoms)
+					if err != nil {
+						return err
+					}
+					allGoms, err = parseGomfile("Gomfile")
+					if err != nil {
+						return err
+					}
+				}
+	*/
 	vendor, err := filepath.Abs(vendorFolder)
 	if err != nil {
 		return err
