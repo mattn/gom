@@ -254,7 +254,7 @@ func (gom *Gom) Checkout() error {
 }
 
 func (gom *Gom) Build(args []string) error {
-	installCmd := []string{"go", "install"}
+	installCmd := []string{"go", "get"}
 	hasPkg := false
 	for _, arg := range args {
 		if !strings.HasPrefix(arg, "-") {
