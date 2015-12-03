@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -83,6 +84,19 @@ func vcsExec(dir string, args ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func list(dir string) ([]string, error) {
+	cmd := exec.Command("go", "list", "./...")
+	cmd.Dir = dir
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+	err := cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	return strings.Split(stdout.String(), "\n"), nil
 }
 
 func has(c interface{}, key string) bool {
@@ -263,9 +277,7 @@ func (gom *Gom) Build(args []string) error {
 		}
 		installCmd = append(installCmd, arg)
 	}
-	if !hasPkg {
-		installCmd = append(installCmd, "./...")
-	}
+
 	vendor, err := filepath.Abs(vendorFolder)
 	if err != nil {
 		return err
@@ -275,7 +287,26 @@ func (gom *Gom) Build(args []string) error {
 		target = gom.name
 	}
 	p := filepath.Join(vendor, "src", target)
-	return vcsExec(p, installCmd...)
+
+	if hasPkg {
+		return vcsExec(p, installCmd...)
+	}
+
+	pkgs, err := list(p)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range pkgs {
+		if strings.HasSuffix(v, "/examples") {
+			continue
+		}
+		err := vcsExec(p, installCmd...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func isFile(p string) bool {
