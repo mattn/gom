@@ -297,10 +297,11 @@ func (gom *Gom) Build(args []string) error {
 		return err
 	}
 
-	for _, v := range pkgs {
-		if strings.HasSuffix(v, "/examples") {
+	for _, pkg := range pkgs {
+		if isIgnorePackage(pkg) {
 			continue
 		}
+		p = filepath.Join(vendor, "src", pkg)
 		err := vcsExec(p, installCmd...)
 		if err != nil {
 			return err
@@ -319,6 +320,22 @@ func isFile(p string) bool {
 func isDir(p string) bool {
 	if fi, err := os.Stat(filepath.Join(p)); err == nil && fi.IsDir() {
 		return true
+	}
+	return false
+}
+
+func isIgnorePackage(pkg string) bool {
+	if pkg == "" {
+		return true
+	}
+	paths := strings.Split(pkg, "/")
+	for _, path := range paths {
+		if path == "examples" {
+			return true
+		}
+		if strings.HasPrefix(path, "_") {
+			return true
+		}
 	}
 	return false
 }
