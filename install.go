@@ -113,6 +113,7 @@ func has(c interface{}, key string) bool {
 	return false
 }
 
+// Update TBD
 func (gom *Gom) Update() error {
 	cmdArgs := []string{"go", "get", "-u"}
 	if insecure, ok := gom.options["insecure"].(string); ok {
@@ -126,8 +127,9 @@ func (gom *Gom) Update() error {
 	return run(cmdArgs, Green)
 }
 
+// Clone TBD
 func (gom *Gom) Clone(args []string) error {
-	vendor, err := filepath.Abs(vendorFolder)
+	vendor, err := NewVendor(vendorFolder)
 	if err != nil {
 		return err
 	}
@@ -137,7 +139,7 @@ func (gom *Gom) Clone(args []string) error {
 			target = gom.name
 		}
 
-		srcdir := filepath.Join(vendor, "src", target)
+		srcdir := filepath.Join(vendor.path, "src", target)
 		if err := os.MkdirAll(srcdir, 0755); err != nil {
 			return err
 		}
@@ -156,7 +158,7 @@ func (gom *Gom) Clone(args []string) error {
 			if !ok {
 				target = gom.name
 			}
-			srcdir := filepath.Join(vendor, "src", target)
+			srcdir := filepath.Join(vendor.path, "src", target)
 			if _, err := os.Stat(srcdir); err != nil {
 				if err := os.MkdirAll(srcdir, 0755); err != nil {
 					return err
@@ -213,10 +215,10 @@ func (gom *Gom) pullPrivate(srcdir string) (err error) {
 
 func (gom *Gom) clonePrivate(srcdir string) (err error) {
 	name := strings.Split(gom.name, "/")
-	privateUrl := fmt.Sprintf("git@%s:%s/%s", name[0], name[1], name[2])
+	privateURL := fmt.Sprintf("git@%s:%s/%s", name[0], name[1], name[2])
 
 	fmt.Printf("fetching private repo %s\n", gom.name)
-	cloneCmd := []string{"git", "clone", privateUrl, srcdir}
+	cloneCmd := []string{"git", "clone", privateURL, srcdir}
 	err = run(cloneCmd, Blue)
 	if err != nil {
 		return
@@ -225,25 +227,26 @@ func (gom *Gom) clonePrivate(srcdir string) (err error) {
 	return
 }
 
+// Checkout TBD
 func (gom *Gom) Checkout() error {
-	commit_or_branch_or_tag := ""
+	VCSDestination := "" //  commit, branch or tag
 	if has(gom.options, "branch") {
-		commit_or_branch_or_tag, _ = gom.options["branch"].(string)
+		VCSDestination, _ = gom.options["branch"].(string)
 	}
 	if has(gom.options, "tag") {
-		commit_or_branch_or_tag, _ = gom.options["tag"].(string)
+		VCSDestination, _ = gom.options["tag"].(string)
 	}
 	if has(gom.options, "commit") {
-		commit_or_branch_or_tag, _ = gom.options["commit"].(string)
+		VCSDestination, _ = gom.options["commit"].(string)
 	}
-	if commit_or_branch_or_tag == "" {
+	if VCSDestination == "" {
 		return nil
 	}
-	vendor, err := filepath.Abs(vendorFolder)
+	vendor, err := NewVendor(vendorFolder)
 	if err != nil {
 		return err
 	}
-	p := filepath.Join(vendor, "src")
+	p := filepath.Join(vendor.path, "src")
 	target, ok := gom.options["target"].(string)
 	if !ok {
 		target = gom.name
@@ -259,14 +262,15 @@ func (gom *Gom) Checkout() error {
 			vcs = bzr
 		}
 		if vcs != nil {
-			p = filepath.Join(vendor, "src", target)
-			return vcs.Sync(p, commit_or_branch_or_tag)
+			p = filepath.Join(vendor.path, "src", target)
+			return vcs.Sync(p, VCSDestination)
 		}
 	}
 	fmt.Printf("Warning: don't know how to checkout for %v\n", gom.name)
 	return errors.New("gom currently support git/hg/bzr for specifying tag/branch/commit")
 }
 
+// Build TBD
 func (gom *Gom) Build(args []string) error {
 	installCmd := []string{"go", "get"}
 	hasPkg := false
@@ -278,7 +282,7 @@ func (gom *Gom) Build(args []string) error {
 		installCmd = append(installCmd, arg)
 	}
 
-	vendor, err := filepath.Abs(vendorFolder)
+	vendor, err := NewVendor(vendorFolder)
 	if err != nil {
 		return err
 	}
@@ -286,7 +290,7 @@ func (gom *Gom) Build(args []string) error {
 	if !ok {
 		target = gom.name
 	}
-	p := filepath.Join(vendor, "src", target)
+	p := filepath.Join(vendor.path, "src", target)
 
 	if hasPkg {
 		return vcsExec(p, installCmd...)
@@ -301,7 +305,7 @@ func (gom *Gom) Build(args []string) error {
 		if isIgnorePackage(pkg) {
 			continue
 		}
-		p = filepath.Join(vendor, "src", pkg)
+		p = filepath.Join(vendor.path, "src", pkg)
 		err := vcsExec(p, installCmd...)
 		if err != nil {
 			return err
@@ -338,60 +342,6 @@ func isIgnorePackage(pkg string) bool {
 		}
 	}
 	return false
-}
-
-func moveSrcToVendorSrc(vendor string) error {
-	vendorSrc := filepath.Join(vendor, "src")
-	dirs, err := readdirnames(vendor)
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(vendorSrc, 0755)
-	if err != nil {
-		return err
-	}
-	for _, dir := range dirs {
-		if dir == "bin" || dir == "pkg" || dir == "src" {
-			continue
-		}
-		err = os.Rename(filepath.Join(vendor, dir), filepath.Join(vendorSrc, dir))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func moveSrcToVendor(vendor string) error {
-	vendorSrc := filepath.Join(vendor, "src")
-	dirs, err := readdirnames(vendorSrc)
-	if err != nil {
-		return err
-	}
-	for _, dir := range dirs {
-		err = os.Rename(filepath.Join(vendorSrc, dir), filepath.Join(vendor, dir))
-		if err != nil {
-			return err
-		}
-	}
-	err = os.Remove(vendorSrc)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func readdirnames(dirname string) ([]string, error) {
-	f, err := os.Open(dirname)
-	if err != nil {
-		return nil, err
-	}
-	list, err := f.Readdirnames(-1)
-	f.Close()
-	if err != nil {
-		return nil, err
-	}
-	return list, nil
 }
 
 func parseInstallFlags(args []string) (opts map[string]string, retargs []string) {
@@ -447,28 +397,23 @@ func install(args []string) error {
 			return err
 		}
 	}
-	vendor, err := filepath.Abs(vendorFolder)
+	vendor, err := NewVendor(vendorFolder)
 	if err != nil {
 		return err
 	}
-	_, err = os.Stat(vendor)
+	_, err = os.Stat(vendor.path)
 	if err != nil {
-		err = os.MkdirAll(vendor, 0755)
+		err = os.MkdirAll(vendor.path, 0755)
 		if err != nil {
 			return err
 		}
 	}
-	err = os.Setenv("GOPATH", vendor)
-	if err != nil {
-		return err
-	}
-	err = os.Setenv("GOBIN", filepath.Join(vendor, "bin"))
-	if err != nil {
+	if err := vendor.SetEnvVariables(); err != nil {
 		return err
 	}
 
 	// 1. Filter goms to install
-	goms := make([]Gom, 0)
+	var goms []Gom
 	for _, gom := range allGoms {
 		if group, ok := gom.options["group"]; ok {
 			if !matchEnv(group) {
@@ -484,8 +429,7 @@ func install(args []string) error {
 	}
 
 	if go15VendorExperimentEnv {
-		err = moveSrcToVendorSrc(vendor)
-		if err != nil {
+		if err := vendor.MoveSrcToVendorSrc(); err != nil {
 			return err
 		}
 	}
@@ -520,8 +464,7 @@ func install(args []string) error {
 	}
 
 	if go15VendorExperimentEnv {
-		err = moveSrcToVendor(vendor)
-		if err != nil {
+		if err := vendor.MoveSrcToVendor(); err != nil {
 			return err
 		}
 	}
@@ -534,22 +477,17 @@ func update() error {
 	if err != nil {
 		return err
 	}
-	vendor, err := filepath.Abs(vendorFolder)
-	if err != nil {
-		return err
-	}
-	err = os.Setenv("GOPATH", vendor)
-	if err != nil {
-		return err
-	}
-	err = os.Setenv("GOBIN", filepath.Join(vendor, "bin"))
+
+	vendor, err := NewVendor(vendorFolder)
 	if err != nil {
 		return err
 	}
 
+	if err = vendor.SetEnvVariables(); err != nil {
+		return err
+	}
 	if go15VendorExperimentEnv {
-		err = moveSrcToVendorSrc(vendor)
-		if err != nil {
+		if err := vendor.MoveSrcToVendorSrc(); err != nil {
 			return err
 		}
 	}
@@ -559,7 +497,7 @@ func update() error {
 		if err != nil {
 			return err
 		}
-		vcs, _, p := vcsScan(vendorSrc(vendor), gom.name)
+		vcs, _, p := vcsScan(vendorSrc(vendor.path), gom.name)
 		if vcs != nil {
 			rev, err := vcs.Revision(p)
 			if err == nil && rev != "" {
@@ -569,8 +507,7 @@ func update() error {
 	}
 
 	if go15VendorExperimentEnv {
-		err = moveSrcToVendor(vendor)
-		if err != nil {
+		if err := vendor.MoveSrcToVendor(); err != nil {
 			return err
 		}
 	}
