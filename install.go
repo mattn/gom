@@ -56,7 +56,6 @@ func (vcs *vcsCmd) Revision(dir string) (string, error) {
 	cmd.Stderr = os.Stderr
 	b, err := cmd.Output()
 	if err != nil {
-		println(err.Error())
 		return "", err
 	}
 	rev := strings.TrimSpace(string(b))
@@ -267,6 +266,28 @@ func (gom *Gom) Checkout() error {
 	return errors.New("gom currently support git/hg/bzr for specifying tag/branch/commit")
 }
 
+func hasGoSource(p string) bool {
+	dir, err := os.Open(p)
+	if err != nil {
+		return false
+	}
+	defer dir.Close()
+	fis, err := dir.Readdir(-1)
+	if err != nil {
+		return false
+	}
+	for _, fi := range fis {
+		if fi.IsDir() {
+			continue
+		}
+		name := fi.Name()
+		if strings.HasSuffix(name, ".go") && !strings.HasSuffix(name, "_test.go") {
+			return true
+		}
+	}
+	return false
+}
+
 func (gom *Gom) Build(args []string) error {
 	installCmd := []string{"go", "get"}
 	hasPkg := false
@@ -302,6 +323,9 @@ func (gom *Gom) Build(args []string) error {
 			continue
 		}
 		p = filepath.Join(vendor, "src", pkg)
+		if !hasGoSource(p) {
+			continue
+		}
 		err := vcsExec(p, installCmd...)
 		if err != nil {
 			return err
