@@ -119,7 +119,13 @@ func (gom *Gom) Update() error {
 			cmdArgs = append(cmdArgs, "-insecure")
 		}
 	}
-	cmdArgs = append(cmdArgs, gom.name+"/...")
+	recursive := "/..."
+	if recursiveFlag, ok := gom.options["recursive"].(string); ok {
+		if recursiveFlag == "false" {
+			recursive = ""
+		}
+	}
+	cmdArgs = append(cmdArgs, gom.name+recursive)
 
 	fmt.Printf("updating %s\n", gom.name)
 	return run(cmdArgs, Green)
@@ -182,8 +188,14 @@ func (gom *Gom) Clone(args []string) error {
 			cmdArgs = append(cmdArgs, "-insecure")
 		}
 	}
+	recursive := "/..."
+	if recursiveFlag, ok := gom.options["recursive"].(string); ok {
+		if recursiveFlag == "false" {
+			recursive = ""
+		}
+	}
 	cmdArgs = append(cmdArgs, args...)
-	cmdArgs = append(cmdArgs, gom.name+"/...")
+	cmdArgs = append(cmdArgs, gom.name+recursive)
 
 	fmt.Printf("downloading %s\n", gom.name)
 	return run(cmdArgs, Blue)
