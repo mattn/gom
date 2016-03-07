@@ -519,7 +519,7 @@ func install(args []string) error {
 		goms = append(goms, gom)
 	}
 
-	if go15VendorExperimentEnv {
+	if isVendoringSupported() {
 		err = moveSrcToVendorSrc(vendor)
 		if err != nil {
 			return err
@@ -555,7 +555,7 @@ func install(args []string) error {
 		}
 	}
 
-	if go15VendorExperimentEnv {
+	if isVendoringSupported() {
 		err = moveSrcToVendor(vendor)
 		if err != nil {
 			return err
@@ -583,7 +583,7 @@ func update() error {
 		return err
 	}
 
-	if go15VendorExperimentEnv {
+	if isVendoringSupported() {
 		err = moveSrcToVendorSrc(vendor)
 		if err != nil {
 			return err
@@ -604,7 +604,7 @@ func update() error {
 		}
 	}
 
-	if go15VendorExperimentEnv {
+	if isVendoringSupported() {
 		err = moveSrcToVendor(vendor)
 		if err != nil {
 			return err

@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/hashicorp/go-version"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -38,11 +40,9 @@ var testEnv = flag.Bool("test", false, "test environment")
 var customGroups = flag.String("groups", "", "comma-separated list of Gomfile groups")
 var customGroupList []string
 var vendorFolder string
-var go15VendorExperimentEnv bool
 
 func init() {
-	go15VendorExperimentEnv = len(os.Getenv("GO15VENDOREXPERIMENT")) > 0
-	if go15VendorExperimentEnv {
+	if isVendoringSupported() {
 		vendorFolder = "vendor"
 	} else {
 		if len(os.Getenv("GOM_VENDOR_NAME")) > 0 {
@@ -53,8 +53,30 @@ func init() {
 	}
 }
 
+func isVendoringSupported() bool {
+	go15, _ := version.NewVersion("1.5.0")
+	go16, _ := version.NewVersion("1.6.0")
+	go17, _ := version.NewVersion("1.7.0")
+
+	goVer, err := version.NewVersion(strings.TrimPrefix(runtime.Version(), "go"))
+	if err != nil {
+		panic(fmt.Sprintf("runtime.Version() returned invalid semantic version: %s", runtime.Version()))
+	}
+
+	// See: https://golang.org/doc/go1.6#go_command
+	if goVer.LessThan(go15) {
+		return false
+	} else if (goVer.Equal(go15) || goVer.GreaterThan(go15)) && goVer.LessThan(go16) {
+		return os.Getenv("GO15VENDOREXPERIMENT") == "1"
+	} else if (goVer.Equal(go16) || goVer.GreaterThan(go16)) && goVer.LessThan(go17) {
+		return os.Getenv("GO15VENDOREXPERIMENT") != "0"
+	} else {
+		return true
+	}
+}
+
 func vendorSrc(vendor string) string {
-	if go15VendorExperimentEnv {
+	if isVendoringSupported() {
 		return vendor
 	} else {
 		return filepath.Join(vendor, "src")
