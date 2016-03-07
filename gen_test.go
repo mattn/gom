@@ -37,7 +37,7 @@ func TestGomfile(t *testing.T) {
 		stdout = oldstdout
 	}()
 	stdout = f
-	err = run([]string{"go", "env"}, None)
+	err = run([]string{"go", "env", "GOPATH"}, None)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,13 +47,7 @@ func TestGomfile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	gopath := ""
-	for _, line := range strings.Split(string(b), "\n") {
-		item := strings.SplitN(line, " ", 2)
-		if len(item) > 1 && strings.HasPrefix(item[1], "GOPATH=") {
-			gopath = item[1][7:]
-		}
-	}
+	gopath := string(b)
 	found := false
 	for _, s := range strings.Split(gopath, string(filepath.ListSeparator)) {
 		if filepath.Clean(s) == filepath.Clean(vendor) {
