@@ -4,9 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/hashicorp/go-version"
+	"github.com/mattn/gover"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -60,9 +60,9 @@ func checkVendoringSupport() bool {
 	go16, _ := version.NewVersion("1.6.0")
 	go17, _ := version.NewVersion("1.7.0")
 
-	goVer, err := version.NewVersion(strings.TrimPrefix(runtime.Version(), "go"))
+	goVer, err := version.NewVersion(strings.TrimPrefix(gover.Version(), "go"))
 	if err != nil {
-		panic(fmt.Sprintf("runtime.Version() returned invalid semantic version: %s", runtime.Version()))
+		panic(fmt.Sprintf("gover.Version() returned invalid semantic version: %s", gover.Version()))
 	}
 
 	// See: https://golang.org/doc/go1.6#go_command

@@ -1,4 +1,5 @@
 group :production, :development do
-  gom 'github.com/daviddengcn/go-colortext', :goos => [:windows, :linux, :darwin]
+  gom 'github.com/mattn/gover'
   gom 'github.com/hashicorp/go-version'
+  gom 'github.com/daviddengcn/go-colortext', :goos => [:windows, :linux, :darwin]
 end
