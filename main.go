@@ -40,9 +40,11 @@ var testEnv = flag.Bool("test", false, "test environment")
 var customGroups = flag.String("groups", "", "comma-separated list of Gomfile groups")
 var customGroupList []string
 var vendorFolder string
+var isVendoringSupported bool
 
 func init() {
-	if isVendoringSupported() {
+	isVendoringSupported = checkVendoringSupport()
+	if isVendoringSupported {
 		vendorFolder = "vendor"
 	} else {
 		if len(os.Getenv("GOM_VENDOR_NAME")) > 0 {
@@ -53,7 +55,7 @@ func init() {
 	}
 }
 
-func isVendoringSupported() bool {
+func checkVendoringSupport() bool {
 	go15, _ := version.NewVersion("1.5.0")
 	go16, _ := version.NewVersion("1.6.0")
 	go17, _ := version.NewVersion("1.7.0")
@@ -76,7 +78,7 @@ func isVendoringSupported() bool {
 }
 
 func vendorSrc(vendor string) string {
-	if isVendoringSupported() {
+	if isVendoringSupported {
 		return vendor
 	} else {
 		return filepath.Join(vendor, "src")
