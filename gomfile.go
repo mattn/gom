@@ -206,6 +206,7 @@ func writeGomfile(filename string, goms []Gom) error {
 	for _, env := range keys(envn) {
 		indent := ""
 		if env != "" {
+			fmt.Fprintf(f, "\n")
 			fmt.Fprintf(f, "group :%s do\n", env)
 			indent = "  "
 		}
