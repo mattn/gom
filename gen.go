@@ -10,6 +10,24 @@ import (
 	"strings"
 )
 
+type importPackages []importPackage
+type importPackage struct {
+	path       string
+	isTestFile bool
+}
+
+func (slice importPackages) Len() int {
+	return len(slice)
+}
+
+func (slice importPackages) Less(i, j int) bool {
+	return slice[i].path < slice[j].path
+}
+
+func (slice importPackages) Swap(i, j int) {
+	slice[i], slice[j] = slice[j], slice[i]
+}
+
 const travis_yml = ".travis.yml"
 
 func genTravisYml() error {
@@ -34,23 +52,23 @@ script:
 	return nil
 }
 
-func appendPkg(pkgs []string, pkg string) []string {
+func appendPkg(pkgs []importPackage, pkg string) ([]importPackage, bool) {
 	for _, ele := range pkgs {
-		if ele == pkg {
-			return pkgs
+		if ele.path == pkg {
+			return pkgs, false
 		}
 	}
-	return append(pkgs, pkg)
+	return append(pkgs, importPackage{path: pkg}), true
 }
 
-func appendPkgs(pkgs, more []string) []string {
+func appendPkgs(pkgs, more []importPackage) []importPackage {
 	for _, pkg := range more {
-		pkgs = appendPkg(pkgs, pkg)
+		pkgs, _ = appendPkg(pkgs, pkg.path)
 	}
 	return pkgs
 }
 
-func scanDirectory(path, srcDir string) (ret []string, err error) {
+func scanDirectory(path, srcDir string) (ret []importPackage, err error) {
 	pkg, err := build.Import(path, srcDir, build.AllowBinary)
 	if err != nil {
 		return ret, err
@@ -61,7 +79,7 @@ func scanDirectory(path, srcDir string) (ret []string, err error) {
 			// Ignore standard packages
 		case !build.IsLocalImport(imp):
 			// Add the external package
-			ret = appendPkg(ret, imp)
+			ret, _ = appendPkg(ret, imp)
 			fallthrough
 		default:
 			// Does the recursive walk
@@ -72,7 +90,22 @@ func scanDirectory(path, srcDir string) (ret []string, err error) {
 			ret = appendPkgs(ret, pkgs)
 		}
 	}
-
+	retTests := []importPackage{}
+	isAdd := false
+	for _, imp := range pkg.TestImports {
+		switch {
+		case pkg.Goroot:
+			// Ignore standard packages
+			break
+		case !build.IsLocalImport(imp):
+			// Add the external package
+			retTests, isAdd = appendPkg(retTests, imp)
+			if isAdd {
+				retTests[len(retTests)-1].isTestFile = true
+			}
+		}
+	}
+	ret = append(ret, retTests...)
 	return ret, err
 }
 
@@ -113,13 +146,13 @@ func genGomfile() error {
 	if err != nil {
 		return err
 	}
-	sort.Strings(all)
+	sort.Sort(importPackages(all))
 	goms := make([]Gom, 0)
 	for _, pkg := range all {
 		for _, p := range filepath.SplitList(os.Getenv("GOPATH")) {
 			var vcs *vcsCmd
 			var n string
-			vcs, n, p = vcsScan(filepath.Join(p, "src"), pkg)
+			vcs, n, p = vcsScan(filepath.Join(p, "src"), pkg.path)
 			if vcs != nil {
 				found := false
 				for _, gom := range goms {
@@ -133,6 +166,9 @@ func genGomfile() error {
 					rev, err := vcs.Revision(p)
 					if err == nil && rev != "" {
 						gom.options["commit"] = rev
+					}
+					if pkg.isTestFile {
+						gom.options["group"] = "test"
 					}
 					goms = append(goms, gom)
 				}
