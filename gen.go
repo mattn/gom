@@ -34,11 +34,6 @@ script:
 	return nil
 }
 
-// http://code.google.com/p/go/source/browse/src/cmd/go/pkg.go?name=go1.1.2#96
-func isStandardImport(path string) bool {
-	return !strings.Contains(path, ".")
-}
-
 func appendPkg(pkgs []string, pkg string) []string {
 	for _, ele := range pkgs {
 		if ele == pkg {
@@ -60,10 +55,9 @@ func scanDirectory(path, srcDir string) (ret []string, err error) {
 	if err != nil {
 		return ret, err
 	}
-
 	for _, imp := range pkg.Imports {
 		switch {
-		case isStandardImport(imp):
+		case pkg.Goroot:
 			// Ignore standard packages
 		case !build.IsLocalImport(imp):
 			// Add the external package
