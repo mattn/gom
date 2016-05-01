@@ -74,6 +74,9 @@ func scanDirectory(path, srcDir string) (ret []importPackage, err error) {
 		return ret, err
 	}
 	for _, imp := range pkg.Imports {
+		if imp == "C" {
+			continue
+		}
 		switch {
 		case pkg.Goroot:
 			// Ignore standard packages
