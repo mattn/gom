@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-version"
+	"github.com/mattn/gover"
 	"os"
 	"os/exec"
 	"path"
@@ -555,7 +557,7 @@ func install(args []string) error {
 		}
 	}
 
-	if isVendoringSupported {
+	if isMoveSrc() {
 		err = moveSrcToVendor(vendor)
 		if err != nil {
 			return err
@@ -604,7 +606,7 @@ func update() error {
 		}
 	}
 
-	if isVendoringSupported {
+	if isMoveSrc() {
 		err = moveSrcToVendor(vendor)
 		if err != nil {
 			return err
@@ -612,4 +614,17 @@ func update() error {
 	}
 
 	return writeGomfile("Gomfile", goms)
+}
+
+func isMoveSrc() bool {
+	go17, _ := version.NewVersion("1.7.0")
+
+	goVer, err := version.NewVersion(strings.TrimPrefix(gover.Version(), "go"))
+	if err != nil {
+		panic(fmt.Sprintf("gover.Version() returned invalid semantic version: %s", gover.Version()))
+	}
+	if goVer.Equal(go17) || goVer.GreaterThan(go17) {
+		return false
+	}
+	return isVendoringSupported
 }
