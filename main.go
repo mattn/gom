@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/hashicorp/go-version"
-	"github.com/mattn/gover"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/hashicorp/go-version"
+	"github.com/mattn/gover"
 )
 
 func usage() {
@@ -55,14 +56,25 @@ func init() {
 	}
 }
 
+func goversion() string {
+	defer recover()
+	return gover.Version()
+}
+
 func checkVendoringSupport() bool {
 	go15, _ := version.NewVersion("1.5.0")
 	go16, _ := version.NewVersion("1.6.0")
 	go17, _ := version.NewVersion("1.7.0")
+	ver := goversion()
 
-	goVer, err := version.NewVersion(strings.TrimPrefix(gover.Version(), "go"))
+	// TODO: maybe gccgo?
+	if ver == "" {
+		return true
+	}
+
+	goVer, err := version.NewVersion(strings.TrimPrefix(ver, "go"))
 	if err != nil {
-		panic(fmt.Sprintf("gover.Version() returned invalid semantic version: %s", gover.Version()))
+		panic(fmt.Sprintf("gover.Version() returned invalid semantic version: %s", ver))
 	}
 
 	// See: https://golang.org/doc/go1.6#go_command
