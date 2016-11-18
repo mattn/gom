@@ -10,9 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/hashicorp/go-version"
-	"github.com/mattn/gover"
 )
 
 type vcsCmd struct {
@@ -303,7 +300,23 @@ func hasGoSource(p string) bool {
 	return false
 }
 
-func (gom *Gom) Build(args []string) error {
+func (gom *Gom) Build(args []string) (err error) {
+	var vendor string
+	vendor, err = filepath.Abs(vendorFolder)
+	if err != nil {
+		return err
+	}
+
+	if !isVendoringSupported {
+		err := moveSrcToVendorSrc(vendor)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			err = moveSrcToVendor(vendor)
+		}()
+	}
+
 	installCmd := []string{"go", "get"}
 	hasPkg := false
 	for _, arg := range args {
@@ -314,10 +327,6 @@ func (gom *Gom) Build(args []string) error {
 		installCmd = append(installCmd, arg)
 	}
 
-	vendor, err := filepath.Abs(vendorFolder)
-	if err != nil {
-		return err
-	}
 	target, ok := gom.options["target"].(string)
 	if !ok {
 		target = gom.name
@@ -522,11 +531,9 @@ func install(args []string) error {
 		goms = append(goms, gom)
 	}
 
-	if isVendoringSupported {
-		err = moveSrcToVendorSrc(vendor)
-		if err != nil {
-			return err
-		}
+	err = moveSrcToVendorSrc(vendor)
+	if err != nil {
+		return err
 	}
 
 	// 2. Clone the repositories
@@ -558,11 +565,9 @@ func install(args []string) error {
 		}
 	}
 
-	if isVendoringSupported || isMoveSrc() {
-		err = moveSrcToVendor(vendor)
-		if err != nil {
-			return err
-		}
+	err = moveSrcToVendor(vendor)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -586,11 +591,9 @@ func update() error {
 		return err
 	}
 
-	if isVendoringSupported {
-		err = moveSrcToVendorSrc(vendor)
-		if err != nil {
-			return err
-		}
+	err = moveSrcToVendorSrc(vendor)
+	if err != nil {
+		return err
 	}
 
 	for _, gom := range goms {
@@ -607,25 +610,10 @@ func update() error {
 		}
 	}
 
-	if isVendoringSupported || isMoveSrc() {
-		err = moveSrcToVendor(vendor)
-		if err != nil {
-			return err
-		}
+	err = moveSrcToVendor(vendor)
+	if err != nil {
+		return err
 	}
 
 	return writeGomfile("Gomfile", goms)
-}
-
-func isMoveSrc() bool {
-	go17, _ := version.NewVersion("1.7.0")
-
-	goVer, err := version.NewVersion(strings.TrimPrefix(goversion(), "go"))
-	if err != nil {
-		panic(fmt.Sprintf("gover.Version() returned invalid semantic version: %s", gover.Version()))
-	}
-	if goVer.Equal(go17) || goVer.GreaterThan(go17) {
-		return false
-	}
-	return isVendoringSupported
 }
