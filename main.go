@@ -62,9 +62,9 @@ func goversion() string {
 }
 
 func checkVendoringSupport() bool {
-	go15, _ := version.NewVersion("1.5.0")
-	go16, _ := version.NewVersion("1.6.0")
-	go17, _ := version.NewVersion("1.7.0")
+	go150, _ := version.NewVersion("1.5.0")
+	go160, _ := version.NewVersion("1.6.0")
+	go173, _ := version.NewVersion("1.7.3")
 	ver := goversion()
 
 	// TODO: maybe gccgo?
@@ -78,11 +78,11 @@ func checkVendoringSupport() bool {
 	}
 
 	// See: https://golang.org/doc/go1.6#go_command
-	if goVer.LessThan(go15) {
+	if goVer.LessThan(go150) {
 		return false
-	} else if (goVer.Equal(go15) || goVer.GreaterThan(go15)) && goVer.LessThan(go16) {
+	} else if (goVer.Equal(go150) || goVer.GreaterThan(go150)) && goVer.LessThan(go160) {
 		return os.Getenv("GO15VENDOREXPERIMENT") == "1"
-	} else if (goVer.Equal(go16) || goVer.GreaterThan(go16)) && goVer.LessThan(go17) {
+	} else if (goVer.Equal(go160) || goVer.GreaterThan(go160)) && goVer.LessThan(go173) {
 		return os.Getenv("GO15VENDOREXPERIMENT") != "0"
 	} else {
 		return true
