@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-version"
-	"github.com/mattn/gover"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/hashicorp/go-version"
+	"github.com/mattn/gover"
 )
 
 type vcsCmd struct {
@@ -557,7 +558,7 @@ func install(args []string) error {
 		}
 	}
 
-	if isMoveSrc() {
+	if isVendoringSupported || isMoveSrc() {
 		err = moveSrcToVendor(vendor)
 		if err != nil {
 			return err
@@ -606,7 +607,7 @@ func update() error {
 		}
 	}
 
-	if isMoveSrc() {
+	if isVendoringSupported || isMoveSrc() {
 		err = moveSrcToVendor(vendor)
 		if err != nil {
 			return err
@@ -619,7 +620,7 @@ func update() error {
 func isMoveSrc() bool {
 	go17, _ := version.NewVersion("1.7.0")
 
-	goVer, err := version.NewVersion(strings.TrimPrefix(gover.Version(), "go"))
+	goVer, err := version.NewVersion(strings.TrimPrefix(goversion(), "go"))
 	if err != nil {
 		panic(fmt.Sprintf("gover.Version() returned invalid semantic version: %s", gover.Version()))
 	}

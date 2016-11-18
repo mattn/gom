@@ -61,6 +61,9 @@ func goversion() string {
 	return gover.Version()
 }
 
+// checkVendoringSupport return whether go have native vendor support.
+// If return false, gom behave vendor directory as GOPATH.
+// If return true, gom doesn't move anything.
 func checkVendoringSupport() bool {
 	go150, _ := version.NewVersion("1.5.0")
 	go160, _ := version.NewVersion("1.6.0")
