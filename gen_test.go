@@ -14,6 +14,13 @@ func TestGomfile(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
+
+	// 'go env GOPATH' returns followed links while ioutil.TempDir(os.TempDir) may returns symbolic link
+	dir, err = filepath.EvalSymlinks(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
