@@ -301,13 +301,17 @@ func hasGoSource(p string) bool {
 }
 
 func (gom *Gom) Build(args []string) (err error) {
+	return gom.build(args, true)
+}
+
+func (gom *Gom) build(args []string, move bool) (err error) {
 	var vendor string
 	vendor, err = filepath.Abs(vendorFolder)
 	if err != nil {
 		return err
 	}
 
-	if !isVendoringSupported {
+	if move && !isVendoringSupported {
 		err := moveSrcToVendorSrc(vendor)
 		if err != nil {
 			return err
@@ -559,7 +563,7 @@ func install(args []string) error {
 				continue
 			}
 		}
-		err = gom.Build(args)
+		err = gom.build(args, false)
 		if err != nil {
 			return err
 		}
