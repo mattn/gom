@@ -212,7 +212,28 @@ func (gom *Gom) pullPrivate(srcdir string) (err error) {
 	defer os.Chdir(cwd)
 
 	fmt.Printf("fetching private repo %s\n", gom.name)
-	pullCmd := "git pull origin master"
+
+	branch := "master"
+ 	if has(gom.options, "branch") {
+ 		branch = gom.options["branch"].(string)
+ 	}
+ 
+ 	var vcs *vcsCmd
+ 	if isDir(filepath.Join(srcdir, ".git")) {
+ 		vcs = git
+ 	} else if isDir(filepath.Join(srcdir, ".hg")) {
+ 		vcs = hg
+ 	} else if isDir(filepath.Join(srcdir, ".bzr")) {
+ 		vcs = bzr
+ 	}
+ 	if vcs != nil {
+ 		err = vcs.Sync(srcdir, branch)
+ 		if err != nil {
+ 			return
+ 		}
+ 	}
+ 
+ 	pullCmd := "git pull origin " + branch
 	pullArgs := strings.Split(pullCmd, " ")
 	err = run(pullArgs, Blue)
 	if err != nil {
