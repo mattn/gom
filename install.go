@@ -224,7 +224,11 @@ func (gom *Gom) pullPrivate(srcdir string) (err error) {
 
 func (gom *Gom) clonePrivate(srcdir string) (err error) {
 	name := strings.Split(gom.name, "/")
-	privateUrl := fmt.Sprintf("git@%s:%s/%s", name[0], name[1], name[2])
+	if len(name) < 3 {
+		return errors.New("the format of private repo address is wrong")
+	}
+	nameTail := strings.Join(name[2:], "/")
+	privateUrl := fmt.Sprintf("git@%s:%s/%s", name[0], name[1], nameTail)
 
 	fmt.Printf("fetching private repo %s\n", gom.name)
 	cloneCmd := []string{"git", "clone", privateUrl, srcdir}
